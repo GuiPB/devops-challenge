@@ -1,4 +1,5 @@
 package ca.erable.coveo;
+
 import java.util.List;
 
 import org.junit.Test;

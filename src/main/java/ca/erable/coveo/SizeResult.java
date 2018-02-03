@@ -3,7 +3,9 @@ package ca.erable.coveo;
 import java.util.function.Function;
 
 public enum SizeResult {
-	BYTE((e) -> Long.valueOf(e), KBYTE((e) -> String.valueOf(e / 1000.0)), MBYTE((e) -> String.valueOf(e / 1000000.0));
+	BYTE((e) -> String.valueOf(e) + " B"), KBYTE((e) -> {
+		return e + " KB";
+	}), MBYTE((e) -> String.valueOf(e / 1000000.0));
 
 	private Function<Long, String> fct;
 

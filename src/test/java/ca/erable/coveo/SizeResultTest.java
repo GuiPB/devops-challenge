@@ -1,9 +1,8 @@
 package ca.erable.coveo;
+
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
-
-import ca.erable.coveo.SizeResult;
 
 public class SizeResultTest {
 
@@ -11,7 +10,7 @@ public class SizeResultTest {
 	public void givenByteResult_thenReturnByteResult() {
 		int sizeInBytes = 12875897;
 
-		assertEquals("12875897", SizeResult.BYTE.get(sizeInBytes));
+		assertEquals("12875897 B", SizeResult.BYTE.get(sizeInBytes));
 	}
 
 	@Test

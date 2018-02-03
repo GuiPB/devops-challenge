@@ -8,12 +8,12 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class BucketsAnalyser {
 
-	private AmazoneS3Service awsS3;
+	private AmazonS3Service awsS3;
 
 	private List<BucketReport> reports = new ArrayList<>();
 	private List<Bucket> bucketList = new ArrayList<>();
 
-	public BucketsAnalyser(AmazoneS3Service service) {
+	public BucketsAnalyser(AmazonS3Service service) {
 		awsS3 = service;
 	}
 

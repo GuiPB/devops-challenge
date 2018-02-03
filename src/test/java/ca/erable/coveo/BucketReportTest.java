@@ -22,7 +22,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 public class BucketReportTest {
 
 	@Mock
-	private AmazoneS3Service s3Service;
+	private AmazonS3Service s3Service;
 
 	@Test
 	public void givenBucketContainsTwoFile_thenReturnTwoFileCount() {

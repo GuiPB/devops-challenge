@@ -37,8 +37,12 @@ public class BucketReport {
 		return name;
 	}
 
-	public Long totalFileSize(SizeResult sizeResult) {
-		return sizeResult.get(totalFileSize);
+	public Long totalFileSize() {
+		return totalFileSize;
+	}
+
+	public String totalReadableFileSize() {
+		return new String();
 	}
 
 	public Date getLastModifiedDate() {

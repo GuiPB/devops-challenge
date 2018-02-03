@@ -21,7 +21,7 @@ import com.amazonaws.services.s3.model.Owner;
 public class BucketsAnalyserTest {
 
 	@Mock
-	private AmazoneS3Service s3Service;
+	private AmazonS3Service s3Service;
 
 	@Test
 	public void givenOneBucket_thenContainsBucketTrue() {
