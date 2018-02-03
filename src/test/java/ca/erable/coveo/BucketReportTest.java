@@ -4,25 +4,15 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
 
-import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-@RunWith(MockitoJUnitRunner.class)
 public class BucketReportTest {
-
-	@Mock
-	private AmazonS3Service s3Service;
 
 	@Test
 	public void givenBucketContainsTwoFile_thenReturnTwoFileCount() {
@@ -33,12 +23,7 @@ public class BucketReportTest {
 		objects.add(s3ObjectSummary);
 		objects.add(s3ObjectSummary);
 
-		Mockito.when(s3Service.listObject(Mockito.any(String.class))).thenReturn(objects);
-		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket("ca.erable")));
-
-		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse();
-		BucketReport report = analyser.report("ca.erable");
+		BucketReport report = new BucketReport("erable", new Date(), objects);
 
 		assertTrue(2 == report.fileCount());
 	}
@@ -52,12 +37,7 @@ public class BucketReportTest {
 		objects.add(s3ObjectSummary);
 		objects.add(s3ObjectSummary);
 
-		Mockito.when(s3Service.listObject(Mockito.any(String.class))).thenReturn(objects);
-		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket("ca.erable")));
-
-		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse();
-		BucketReport report = analyser.report("ca.erable");
+		BucketReport report = new BucketReport("name", new Date(), objects);
 
 		assertTrue(3 == report.fileCount());
 	}
@@ -65,12 +45,7 @@ public class BucketReportTest {
 	@Test
 	public void givenBucketHasNoFiles_thenReturnCountZero() {
 
-		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket("ca.erable")));
-		Mockito.when(s3Service.listObject(Mockito.any(String.class))).thenReturn(new ArrayList<S3ObjectSummary>());
-
-		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse();
-		BucketReport report = analyser.report("ca.erable");
+		BucketReport report = new BucketReport("eralbe", new Date(), new ArrayList<S3ObjectSummary>());
 
 		assertTrue(0 == report.fileCount());
 	}
@@ -81,23 +56,14 @@ public class BucketReportTest {
 		calendar.set(2012, Calendar.JANUARY, 1);
 
 		Date simulatedCreationTime = calendar.getTime();
-		Bucket first = new Bucket("name");
-		first.setCreationDate(simulatedCreationTime);
 
-		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(first));
-		Mockito.when(s3Service.listObject(Mockito.any(String.class))).thenReturn(new ArrayList<S3ObjectSummary>());
-
-		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse();
-		BucketReport rep = analyser.report("name");
+		BucketReport rep = new BucketReport("name", simulatedCreationTime, new ArrayList<S3ObjectSummary>());
 
 		assertTrue(simulatedCreationTime.getTime() == rep.getCreationDate().getTime());
 	}
 
 	@Test
 	public void givenThreeTime300k_thenReportSum() {
-		Bucket first = new Bucket("name");
-		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(first));
 		ArrayList<S3ObjectSummary> returnedObject = new ArrayList<S3ObjectSummary>();
 
 		S3ObjectSummary firstObject = new S3ObjectSummary();
@@ -111,18 +77,13 @@ public class BucketReportTest {
 		secondObject.setLastModified(new Date());
 
 		returnedObject.add(secondObject);
-		Mockito.when(s3Service.listObject(Mockito.any(String.class))).thenReturn(returnedObject);
 
-		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse();
-		BucketReport rep = analyser.report("name");
+		BucketReport rep = new BucketReport("name", new Date(), returnedObject);
 		assertEquals(new Long(600), rep.totalFileSize());
 	}
 
 	@Test
 	public void givenMultipleFiles_thenReturnLastModifiedForBucket() {
-		Bucket first = new Bucket("name");
-		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(first));
 		ArrayList<S3ObjectSummary> returnedObject = new ArrayList<S3ObjectSummary>();
 
 		Calendar instance = Calendar.getInstance();
@@ -138,13 +99,9 @@ public class BucketReportTest {
 
 		S3ObjectSummary secondObject = new S3ObjectSummary();
 		secondObject.setLastModified(januaryFirst2000);
-
 		returnedObject.add(secondObject);
-		Mockito.when(s3Service.listObject(Mockito.any(String.class))).thenReturn(returnedObject);
 
-		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse();
-		BucketReport rep = analyser.report("name");
+		BucketReport rep = new BucketReport("name", new Date(), returnedObject);
 
 		assertEquals(januarySecond2000, rep.getLastModifiedDate());
 	}
