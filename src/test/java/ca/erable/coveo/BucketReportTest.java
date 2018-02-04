@@ -25,7 +25,7 @@ public class BucketReportTest {
 
 		BucketReport report = new BucketReport("erable", new Date(), objects);
 
-		assertTrue(2 == report.fileCount());
+		assertTrue(2 == report.getFileCount());
 	}
 
 	@Test
@@ -39,7 +39,7 @@ public class BucketReportTest {
 
 		BucketReport report = new BucketReport("name", new Date(), objects);
 
-		assertTrue(3 == report.fileCount());
+		assertTrue(3 == report.getFileCount());
 	}
 
 	@Test
@@ -47,7 +47,7 @@ public class BucketReportTest {
 
 		BucketReport report = new BucketReport("eralbe", new Date(), new ArrayList<S3ObjectSummary>());
 
-		assertTrue(0 == report.fileCount());
+		assertTrue(0 == report.getFileCount());
 	}
 
 	@Test
@@ -79,7 +79,7 @@ public class BucketReportTest {
 		returnedObject.add(secondObject);
 
 		BucketReport rep = new BucketReport("name", new Date(), returnedObject);
-		assertEquals(new Long(600), rep.totalFileSize());
+		assertEquals(new Long(600), rep.getTotalFileSize());
 	}
 
 	@Test
@@ -104,5 +104,15 @@ public class BucketReportTest {
 		BucketReport rep = new BucketReport("name", new Date(), returnedObject);
 
 		assertEquals(januarySecond2000, rep.getLastModifiedDate());
+	}
+
+	@Test
+	public void givenHumanReadable_thenReturnHumanReadable() {
+		BucketReport report = new BucketReport("", null, null);
+
+		assertEquals("12,9 MB", report.toReadableFileSize(12875897L));
+		assertEquals("999 B", report.toReadableFileSize(999L));
+		assertEquals("250 B", report.toReadableFileSize(250L));
+		assertEquals("2,5 kB", report.toReadableFileSize(2500L));
 	}
 }

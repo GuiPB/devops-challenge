@@ -7,7 +7,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class BucketReport {
 
-	private Integer fileCount;
+	private Integer fileCount = 0;
 	private Date creationDate;
 	private String name;
 	private Long totalFileSize = 0L;
@@ -15,9 +15,9 @@ public class BucketReport {
 
 	public BucketReport(String name, Date creationDate, List<S3ObjectSummary> objects) {
 		this.name = name;
-		this.fileCount = objects.size();
 		this.creationDate = creationDate;
-		if (!objects.isEmpty()) {
+		if (objects != null && !objects.isEmpty()) {
+			this.fileCount = objects.size();
 			this.totalFileSize = objects.stream().mapToLong(S3ObjectSummary::getSize).sum();
 			this.lastModifiedDate = objects.stream()
 					.sorted((f, g) -> g.getLastModified().compareTo(f.getLastModified())).findFirst().get()
@@ -25,7 +25,7 @@ public class BucketReport {
 		}
 	}
 
-	public Integer fileCount() {
+	public Integer getFileCount() {
 		return fileCount;
 	}
 
@@ -37,12 +37,31 @@ public class BucketReport {
 		return name;
 	}
 
-	public Long totalFileSize() {
+	public Long getTotalFileSize() {
 		return totalFileSize;
 	}
 
-	public String totalReadableFileSize() {
-		return new String();
+	public String toReadableFileSize() {
+		return toReadableFileSize(totalFileSize);
+	}
+
+	public String toReadableFileSize(Long bytes) {
+		// Ce code provient d'une solution propose par un developpeur sur stackoverflow.
+		// Il est rare que je copie des lignes de code, mais j'ai confiance en celles-ci
+		// :)
+		// Reference:
+		// https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
+		int unit = 1000;
+		if (bytes < unit)
+			return bytes + " B";
+
+		// Determiner l'exposant de l'unitee de mesure la plus adequate
+		int exp = (int) (Math.log(bytes) / Math.log(unit));
+
+		// Sert a determiner l'unitee de mesure qu'on va employer. Base sur la position
+		// de l'exposant
+		char pre = "kMGTPE".charAt(exp - 1);
+		return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
 	}
 
 	public Date getLastModifiedDate() {

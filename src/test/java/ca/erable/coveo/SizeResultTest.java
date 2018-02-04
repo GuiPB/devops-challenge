@@ -26,4 +26,16 @@ public class SizeResultTest {
 
 		assertEquals("12.875897", SizeResult.MBYTE.get(sizeInBytes));
 	}
+
+	@Test
+	public void test() {
+		int sizeInBytes = 12875897;
+
+		boolean si = true;
+
+		int unit = si ? 1000 : 1024;
+		int exp = (int) (Math.log(sizeInBytes) / Math.log(unit));
+		String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
+		System.out.println(String.format("%.1f %sB", sizeInBytes / Math.pow(unit, exp), pre));
+	}
 }

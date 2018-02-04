@@ -126,6 +126,6 @@ public class BucketsAnalyserTest {
 
 		BucketReport report = analyser.report("ca.erable.boisclair");
 
-		assertTrue(1 == report.fileCount());
+		assertTrue(1 == report.getFileCount());
 	}
 }
