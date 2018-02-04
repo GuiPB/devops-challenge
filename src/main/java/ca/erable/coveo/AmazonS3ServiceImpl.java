@@ -14,8 +14,8 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
 	private AmazonS3 defaultClient;
 
-	public AmazonS3ServiceImpl() {
-		defaultClient = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_2).build();
+	public AmazonS3ServiceImpl(Regions region) {
+		defaultClient = AmazonS3ClientBuilder.standard().withRegion(region).build();
 	}
 
 	@Override

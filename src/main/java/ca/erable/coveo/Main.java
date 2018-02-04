@@ -1,12 +1,14 @@
 package ca.erable.coveo;
 
+import com.amazonaws.regions.Regions;
+
 public class Main {
 
 	public static void main(String[] args) {
-		AmazonS3Service service = new AmazonS3ServiceImpl();
+		AmazonS3Service service = new AmazonS3ServiceImpl(Regions.US_EAST_2);
 		BucketsAnalyser analyser = new BucketsAnalyser(service);
 
-		analyser.analyse();
+		analyser.analyse(StorageFilter.STANDARD_IA);
 
 		BucketReport report = analyser.report("ca.erable.boisclair");
 
