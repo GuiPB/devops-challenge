@@ -8,7 +8,7 @@ public class Main {
 		AmazonS3Service service = new AmazonS3ServiceImpl(Regions.US_EAST_2);
 		BucketsAnalyser analyser = new BucketsAnalyser(service);
 
-		analyser.analyse(StorageFilter.STANDARD);
+		analyser.analyse("ca.erable.");
 
 		BucketReport report = analyser.report("ca.erable.boisclair");
 

@@ -128,4 +128,16 @@ public class BucketsAnalyserTest {
 
 		assertTrue(1 == report.getFileCount());
 	}
+
+	@Test
+	public void givenAPatternIsProvided_thenListObjetOnlyOnFilteredBucket() {
+		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket("ca.erable.boisclair"),
+				new Bucket("ca.erable.boisclair2"), new Bucket("ca.era.boisclair")));
+
+		Mockito.when(s3Service.listObject(Mockito.anyString())).thenReturn(new ArrayList<>());
+		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
+		analyser.analyse("ca.erable.*");
+
+		Mockito.verify(s3Service, Mockito.never()).listObject("ca.erab.boisclair");
+	}
 }

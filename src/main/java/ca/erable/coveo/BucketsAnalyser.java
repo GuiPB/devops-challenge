@@ -2,6 +2,8 @@ package ca.erable.coveo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.amazonaws.services.s3.model.Bucket;
@@ -16,6 +18,8 @@ public class BucketsAnalyser {
 
 	private StorageFilter byStorage = StorageFilter.NO_FILTER;
 
+	private Predicate<String> bucketNameMatches = Pattern.compile(".*").asPredicate();;
+
 	public BucketsAnalyser(AmazonS3Service service) {
 		awsS3 = service;
 	}
@@ -29,7 +33,9 @@ public class BucketsAnalyser {
 	}
 
 	public void analyse() {
-		bucketList = awsS3.listBuckets();
+		// Appliquer le filtre de nom.
+		bucketList = awsS3.listBuckets().stream().filter(bucket -> bucketNameMatches.test(bucket.getName()))
+				.collect(Collectors.toList());
 		bucketList.stream().forEach(t -> {
 			List<S3ObjectSummary> objects = awsS3.listObject(t.getName());
 			reports.add(new BucketReport(t.getName(), t.getCreationDate(),
@@ -37,8 +43,18 @@ public class BucketsAnalyser {
 		});
 	}
 
+	/**
+	 * Applique un filtre base sur le type de systeme de fichier
+	 * 
+	 * @param storageFilter
+	 */
 	public void analyse(StorageFilter storageFilter) {
-		this.byStorage = storageFilter;
+		byStorage = storageFilter;
+		analyse();
+	}
+
+	public void analyse(String pattern) {
+		bucketNameMatches = Pattern.compile(pattern).asPredicate();
 		analyse();
 	}
 }
