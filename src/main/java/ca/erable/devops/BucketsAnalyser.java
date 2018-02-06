@@ -35,15 +35,16 @@ public class BucketsAnalyser {
     }
 
     public void analyse() {
-        // Appliquer le filtre de nom.
+        // Appliquer le filtre de nom optionnel.
         bucketList = awsS3.listBuckets().stream().filter(bucket -> bucketNameMatches.test(bucket.getName())).collect(Collectors.toList());
-        bucketList.stream().forEach(bucket -> {
+
+        for (Bucket bucket : bucketList) {
             List<S3ObjectSummary> objects = awsS3.listObject(bucket.getName());
             Regions bucketLocation = awsS3.getBucketLocation(bucket.getName());
             List<S3ObjectSummary> filteredObject = objects.stream().filter(obj -> byStorage.isFiltred(obj)).collect(Collectors.toList());
             BucketReport bucketReport = new BucketReport(bucket.getName(), bucket.getCreationDate(), bucketLocation, filteredObject);
             reports.add(bucketReport);
-        });
+        }
     }
 
     /**
