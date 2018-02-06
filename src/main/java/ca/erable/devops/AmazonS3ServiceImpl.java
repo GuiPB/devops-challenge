@@ -14,48 +14,52 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class AmazonS3ServiceImpl implements AmazonS3Service {
 
-	private AmazonS3 defaultClient;
-	private Map<String, Regions> locationByBucket = new HashMap<>();
-	private Map<String, AmazonS3> clientsByBucket = new HashMap<>();
+    private AmazonS3 defaultClient;
+    private Map<String, Regions> locationByBucket = new HashMap<>();
+    private Map<String, AmazonS3> clientsByBucket = new HashMap<>();
 
-	public AmazonS3ServiceImpl(Regions region) {
-		defaultClient = AmazonS3ClientBuilder.standard().withRegion(region).build();
-	}
+    public AmazonS3ServiceImpl(Regions region) {
+        defaultClient = AmazonS3ClientBuilder.standard().withRegion(region).build();
+    }
 
-	@Override
-	public List<Bucket> listBuckets() {
-		List<Bucket> listBuckets = defaultClient.listBuckets();
-		// Pour chaque bucket, constuire un client avec la bonne region.
-		listBuckets.stream().forEach((bucket -> {
-			String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
-			Regions bucketRegion = Regions.fromName(bucketLocation);
-			locationByBucket.put(bucket.getName(), bucketRegion);
-			clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withRegion(bucketRegion).build());
-		}));
+    public AmazonS3ServiceImpl() {
+        defaultClient = AmazonS3ClientBuilder.standard().withRegion(Regions.DEFAULT_REGION).build();
+    }
 
-		return listBuckets;
-	}
+    @Override
+    public List<Bucket> listBuckets() {
+        List<Bucket> listBuckets = defaultClient.listBuckets();
+        // Pour chaque bucket, constuire un client avec la bonne region.
+        listBuckets.stream().forEach((bucket -> {
+            String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
+            Regions bucketRegion = Regions.fromName(bucketLocation);
+            locationByBucket.put(bucket.getName(), bucketRegion);
+            clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withRegion(bucketRegion).build());
+        }));
 
-	@Override
-	public List<S3ObjectSummary> listObject(String bucketName) {
-		AmazonS3 clientForBucket = clientsByBucket.get(bucketName);
-		ObjectListing listObjects = clientForBucket.listObjects(bucketName);
+        return listBuckets;
+    }
 
-		List<S3ObjectSummary> objects = new ArrayList<>();
+    @Override
+    public List<S3ObjectSummary> listObject(String bucketName) {
+        AmazonS3 clientForBucket = clientsByBucket.get(bucketName);
+        ObjectListing listObjects = clientForBucket.listObjects(bucketName);
 
-		objects.addAll(listObjects.getObjectSummaries());
+        List<S3ObjectSummary> objects = new ArrayList<>();
 
-		while (listObjects.isTruncated()) {
-			ObjectListing listNextBatchOfObjects = clientForBucket.listNextBatchOfObjects(listObjects);
-			objects.addAll(listNextBatchOfObjects.getObjectSummaries());
-		}
+        objects.addAll(listObjects.getObjectSummaries());
 
-		return objects;
-	}
+        while (listObjects.isTruncated()) {
+            ObjectListing listNextBatchOfObjects = clientForBucket.listNextBatchOfObjects(listObjects);
+            objects.addAll(listNextBatchOfObjects.getObjectSummaries());
+        }
 
-	@Override
-	public Regions getBucketLocation(String bucketName) {
-		return locationByBucket.getOrDefault(bucketName, Regions.DEFAULT_REGION);
-	}
+        return objects;
+    }
+
+    @Override
+    public Regions getBucketLocation(String bucketName) {
+        return locationByBucket.getOrDefault(bucketName, Regions.DEFAULT_REGION);
+    }
 
 }
