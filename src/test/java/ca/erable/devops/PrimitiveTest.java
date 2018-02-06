@@ -14,44 +14,45 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class PrimitiveTest {
 
-	@Test
-	public void test() {
-		AmazonS3 defaultClient = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_2).build();
+    @Test
+    public void test() {
+        AmazonS3 defaultClient = AmazonS3ClientBuilder.standard().withRegion(Regions.US_EAST_2).build();
 
-		List<Bucket> listBuckets = defaultClient.listBuckets();
+        List<Bucket> listBuckets = defaultClient.listBuckets();
 
-		System.out.println("Buckets");
-		listBuckets.stream().forEach((bk) -> {
-			System.out.println(bk.getName());
-			System.out.println(bk.getCreationDate());
-			System.out.println(defaultClient.getBucketLocation(bk.getName()));
-		});
+        System.out.println("Buckets");
+        listBuckets.stream().forEach((bk) -> {
+            System.out.println(bk.getName());
+            System.out.println(bk.getCreationDate());
+            System.out.println(defaultClient.getBucketLocation(bk.getName()));
+        });
 
-		Long totalFileSize = new Long(0);
-		Integer fileCount = new Integer(0);
+        Long totalFileSize = new Long(0);
+        Integer fileCount = new Integer(0);
 
-		ListObjectsRequest req = new ListObjectsRequest("ca.erable.boisclair", null, null, "/", null);
-		ObjectListing listObjects = defaultClient.listObjects(req);
+        ListObjectsRequest req = new ListObjectsRequest("ca.erable.boisclair", "dossier1/", null, null, null);
+        ObjectListing listObjects = defaultClient.listObjects(req);
+        System.out.println("Common prefixes: " + listObjects.getCommonPrefixes());
 
-		fileCount += listObjects.getObjectSummaries().size();
-		totalFileSize += listObjects.getObjectSummaries().stream().mapToLong(S3ObjectSummary::getSize).sum();
+        fileCount += listObjects.getObjectSummaries().size();
+        totalFileSize += listObjects.getObjectSummaries().stream().mapToLong(S3ObjectSummary::getSize).sum();
 
-		while (listObjects.isTruncated()) {
-			listObjects = defaultClient.listNextBatchOfObjects(listObjects);
-			fileCount += listObjects.getObjectSummaries().size();
-			totalFileSize += listObjects.getObjectSummaries().stream().mapToLong(S3ObjectSummary::getSize).sum();
-		}
+        while (listObjects.isTruncated()) {
+            listObjects = defaultClient.listNextBatchOfObjects(listObjects);
+            fileCount += listObjects.getObjectSummaries().size();
+            totalFileSize += listObjects.getObjectSummaries().stream().mapToLong(S3ObjectSummary::getSize).sum();
+        }
 
-		System.out.println("File count: " + fileCount);
-		System.out.println("Total file size: " + totalFileSize);
+        System.out.println("File count: " + fileCount);
+        System.out.println("Total file size: " + totalFileSize);
 
-		System.out.println("Files");
+        System.out.println("Files");
 
-		listObjects.getObjectSummaries().stream().forEach((elem) -> {
-			System.out.println(elem.getKey());
-			System.out.println(elem.getSize());
-			System.out.println(elem.getLastModified());
-			System.out.println(elem.getStorageClass());
-		});
-	}
+        listObjects.getObjectSummaries().stream().forEach((elem) -> {
+            System.out.println(elem.getKey());
+            System.out.println(elem.getSize());
+            System.out.println(elem.getLastModified());
+            System.out.println(elem.getStorageClass());
+        });
+    }
 }
