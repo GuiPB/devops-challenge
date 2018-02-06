@@ -17,8 +17,8 @@ public class S3BucketTool {
     public static void main(String[] args) {
 
         Options options = new Options();
-        options.addOption(Option.builder("hr").longOpt("human-readable").desc("Shows file size in a human readable format. Ex: kB, MB, GB...").build());
         options.addOption(Option.builder("h").longOpt("help").desc("Prints usage").hasArg(false).build());
+        options.addOption(Option.builder("hr").longOpt("human-readable").desc("Shows file size in a human readable format. Ex: kB, MB, GB...").build());
         options.addOption(Option.builder("rg").longOpt("region").desc("Specifies a region for default AmazonS3Client").hasArg().build());
         options.addOption(Option.builder("gr").longOpt("group-by-region").desc("Groups results by regions i.e. summarize by region instead of by bucket").hasArg().build());
         options.addOption(Option.builder("st").longOpt("stockage-type").desc("Filters shown information by a specified stockage type").hasArg().build());
@@ -30,13 +30,36 @@ public class S3BucketTool {
 
             Regions region = Regions.DEFAULT_REGION;
 
-            if (line.hasOption("r")) {
-                region = Regions.fromName(line.getOptionValue("r"));
+            if (line.hasOption("rg")) {
+                region = Regions.fromName(line.getOptionValue("rg"));
+            }
+
+            boolean humanReadable = false;
+
+            if (line.hasOption("hr")) {
+                humanReadable = true;
+            }
+
+            boolean groupByRegion = false;
+
+            if (line.hasOption("gr")) {
+                groupByRegion = true;
+            }
+
+            StorageFilter filterByStorage = StorageFilter.NO_FILTER;
+
+            if (line.hasOption("st")) {
+                String storageOpt = line.getOptionValue("st");
+                filterByStorage = StorageFilter.valueOf(storageOpt.toUpperCase());
+            }
+
+            String pattern = "";
+
+            if (line.hasOption("rep")) {
+                pattern = line.getOptionValue("rep");
             }
 
             AmazonS3Service service = new AmazonS3ServiceImpl(region);
-
-            boolean humanReadable = line.hasOption("h");
 
             BucketsAnalyser analyser = new BucketsAnalyser(service);
 
