@@ -128,7 +128,7 @@ public class BucketsAnalyserTest {
 		Mockito.when(s3Service.listObject(Mockito.anyString())).thenReturn(objSum);
 
 		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse(StorageFilter.STANDARD);
+		analyser.analyseBuckets(StorageFilter.STANDARD);
 
 		BucketReport report = analyser.report("ca.erable.boisclair");
 
@@ -142,7 +142,7 @@ public class BucketsAnalyserTest {
 
 		Mockito.when(s3Service.listObject(Mockito.anyString())).thenReturn(new ArrayList<>());
 		BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-		analyser.analyse("ca.erable.*");
+		analyser.analyseBuckets("ca.erable.*");
 
 		Mockito.verify(s3Service, Mockito.never()).listObject("ca.erab.boisclair");
 	}

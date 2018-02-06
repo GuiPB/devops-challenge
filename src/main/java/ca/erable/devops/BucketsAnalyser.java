@@ -51,12 +51,18 @@ public class BucketsAnalyser {
      * 
      * @param storageFilter
      */
-    public void analyse(StorageFilter storageFilter) {
+    public void analyseBuckets(StorageFilter storageFilter) {
         byStorage = storageFilter;
         analyse();
     }
 
-    public void analyse(String pattern) {
+    public void analyseBuckets(String pattern) {
+        bucketNameMatches = Pattern.compile(pattern).asPredicate();
+        analyse();
+    }
+
+    public void analyseBuckets(StorageFilter storageFilter, String pattern) {
+        byStorage = storageFilter;
         bucketNameMatches = Pattern.compile(pattern).asPredicate();
         analyse();
     }
