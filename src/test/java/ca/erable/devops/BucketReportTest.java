@@ -1,4 +1,4 @@
-package ca.erable.coveo;
+package ca.erable.devops;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -10,7 +10,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+
+import ca.erable.devops.BucketReport;
 
 public class BucketReportTest {
 
@@ -23,7 +26,7 @@ public class BucketReportTest {
 		objects.add(s3ObjectSummary);
 		objects.add(s3ObjectSummary);
 
-		BucketReport report = new BucketReport("erable", new Date(), objects);
+		BucketReport report = new BucketReport("erable", new Date(), Regions.DEFAULT_REGION, objects);
 
 		assertTrue(2 == report.getFileCount());
 	}
@@ -37,7 +40,7 @@ public class BucketReportTest {
 		objects.add(s3ObjectSummary);
 		objects.add(s3ObjectSummary);
 
-		BucketReport report = new BucketReport("name", new Date(), objects);
+		BucketReport report = new BucketReport("name", new Date(), Regions.DEFAULT_REGION, objects);
 
 		assertTrue(3 == report.getFileCount());
 	}
@@ -45,7 +48,8 @@ public class BucketReportTest {
 	@Test
 	public void givenBucketHasNoFiles_thenReturnCountZero() {
 
-		BucketReport report = new BucketReport("eralbe", new Date(), new ArrayList<S3ObjectSummary>());
+		BucketReport report = new BucketReport("eralbe", new Date(), Regions.DEFAULT_REGION,
+				new ArrayList<S3ObjectSummary>());
 
 		assertTrue(0 == report.getFileCount());
 	}
@@ -57,7 +61,8 @@ public class BucketReportTest {
 
 		Date simulatedCreationTime = calendar.getTime();
 
-		BucketReport rep = new BucketReport("name", simulatedCreationTime, new ArrayList<S3ObjectSummary>());
+		BucketReport rep = new BucketReport("name", simulatedCreationTime, Regions.DEFAULT_REGION,
+				new ArrayList<S3ObjectSummary>());
 
 		assertTrue(simulatedCreationTime.getTime() == rep.getCreationDate().getTime());
 	}
@@ -78,7 +83,7 @@ public class BucketReportTest {
 
 		returnedObject.add(secondObject);
 
-		BucketReport rep = new BucketReport("name", new Date(), returnedObject);
+		BucketReport rep = new BucketReport("name", new Date(), Regions.DEFAULT_REGION, returnedObject);
 		assertEquals(new Long(600), rep.getTotalFileSize());
 	}
 
@@ -101,14 +106,14 @@ public class BucketReportTest {
 		secondObject.setLastModified(januaryFirst2000);
 		returnedObject.add(secondObject);
 
-		BucketReport rep = new BucketReport("name", new Date(), returnedObject);
+		BucketReport rep = new BucketReport("name", new Date(), Regions.DEFAULT_REGION, returnedObject);
 
 		assertEquals(januarySecond2000, rep.getLastModifiedDate());
 	}
 
 	@Test
 	public void givenHumanReadable_thenReturnHumanReadable() {
-		BucketReport report = new BucketReport("", null, null);
+		BucketReport report = new BucketReport("", null, Regions.DEFAULT_REGION, null);
 
 		assertEquals("12,9 MB", report.toReadableFileSize(12875897L));
 		assertEquals("999 B", report.toReadableFileSize(999L));

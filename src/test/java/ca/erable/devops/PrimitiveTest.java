@@ -1,4 +1,4 @@
-package ca.erable.coveo;
+package ca.erable.devops;
 
 import java.util.List;
 

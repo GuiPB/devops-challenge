@@ -1,4 +1,4 @@
-package ca.erable.coveo;
+package ca.erable.devops;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -15,10 +15,16 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.Owner;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
+
+import ca.erable.devops.AmazonS3Service;
+import ca.erable.devops.BucketReport;
+import ca.erable.devops.BucketsAnalyser;
+import ca.erable.devops.StorageFilter;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BucketsAnalyserTest {
@@ -76,7 +82,7 @@ public class BucketsAnalyserTest {
 		Bucket simulatedBucket = new Bucket(bucketName);
 		simulatedBucket.setOwner(new Owner("1", "guillaume"));
 
-		BucketReport simulatedReport = new BucketReport(bucketName, null, new ArrayList<>());
+		BucketReport simulatedReport = new BucketReport(bucketName, null, Regions.DEFAULT_REGION, new ArrayList<>());
 
 		Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(simulatedBucket));
 

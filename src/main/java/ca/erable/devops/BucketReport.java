@@ -1,8 +1,9 @@
-package ca.erable.coveo;
+package ca.erable.devops;
 
 import java.util.Date;
 import java.util.List;
 
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class BucketReport {
@@ -12,8 +13,9 @@ public class BucketReport {
 	private String name;
 	private Long totalFileSize = 0L;
 	private Date lastModifiedDate = null;
+	private Regions bucketLocation = Regions.DEFAULT_REGION;
 
-	public BucketReport(String name, Date creationDate, List<S3ObjectSummary> objects) {
+	public BucketReport(String name, Date creationDate, Regions bucketLocation, List<S3ObjectSummary> objects) {
 		this.name = name;
 		this.creationDate = creationDate;
 		if (objects != null && !objects.isEmpty()) {
@@ -23,6 +25,7 @@ public class BucketReport {
 					.sorted((f, g) -> g.getLastModified().compareTo(f.getLastModified())).findFirst().get()
 					.getLastModified();
 		}
+		this.bucketLocation = bucketLocation;
 	}
 
 	public Integer getFileCount() {
@@ -41,6 +44,10 @@ public class BucketReport {
 		return totalFileSize;
 	}
 
+	public Regions getBucketLocation() {
+		return bucketLocation;
+	}
+
 	public String toReadableFileSize() {
 		return toReadableFileSize(totalFileSize);
 	}
@@ -52,6 +59,8 @@ public class BucketReport {
 		// Reference:
 		// https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
 		int unit = 1000;
+
+		// Retour premature si on est en bas du 1000 B
 		if (bytes < unit)
 			return bytes + " B";
 
@@ -117,4 +126,12 @@ public class BucketReport {
 		return true;
 	}
 
+	public void show() {
+		System.out.println("Bucket name: " + getName());
+		System.out.println("Bucket location: " + getBucketLocation().toString());
+		System.out.println("Bucket creation date: " + getCreationDate());
+		System.out.println("Bucket last modified: " + getLastModifiedDate());
+		System.out.println("Bucket file count: " + getFileCount());
+		System.out.println("Bucket size: " + toReadableFileSize());
+	}
 }
