@@ -126,11 +126,11 @@ public class BucketReport {
 
     public void show() {
         System.out.println("Bucket name: " + getName());
-        System.out.println("Bucket location: " + getBucketLocation().toString());
-        System.out.println("Bucket creation date: " + getCreationDate());
-        System.out.println("Bucket last modified: " + getLastModifiedDate());
-        System.out.println("Bucket file count: " + getFileCount());
-        System.out.println("Bucket size: " + getTotalFileSize());
+        System.out.println("location: " + getBucketLocation().toString());
+        System.out.println("creation date: " + getCreationDate());
+        System.out.println("last modified: " + getLastModifiedDate());
+        System.out.println("file count: " + getFileCount());
+        System.out.println("size: " + getTotalFileSize());
     }
 
     public void show(boolean humanReadable) {
@@ -143,10 +143,10 @@ public class BucketReport {
 
     public void showHumanReadable() {
         System.out.println("Bucket name: " + getName());
-        System.out.println("Bucket location: " + getBucketLocation().toString());
-        System.out.println("Bucket creation date: " + getCreationDate());
-        System.out.println("Bucket last modified: " + getLastModifiedDate());
-        System.out.println("Bucket file count: " + getFileCount());
-        System.out.println("Bucket size: " + toReadableFileSize());
+        System.out.println("location: " + getBucketLocation().toString());
+        System.out.println("creation date: " + getCreationDate());
+        System.out.println("last modified: " + getLastModifiedDate());
+        System.out.println("file count: " + getFileCount());
+        System.out.println("size: " + toReadableFileSize());
     }
 }
