@@ -6,11 +6,11 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.amazonaws.services.s3.model.StorageClass;
 
 public enum StorageFilter {
-	STANDARD((o) -> o.equals(StorageClass.Standard.toString())), 
-	STANDARD_IA((o) -> o.equals(StorageClass.StandardInfrequentAccess.toString())), 
-	REDUCED_REDUNDANCY((o) -> o.equals(StorageClass.ReducedRedundancy.toString())), 
-	GLACIER((o) -> o.equals(StorageClass.Glacier.toString())), 
-	NO_FILTER((o) -> o.equals(o));
+	STANDARD(obj -> obj.equals(StorageClass.Standard.toString())), 
+	STANDARD_IA(obj -> obj.equals(StorageClass.StandardInfrequentAccess.toString())), 
+	REDUCED_REDUNDANCY(obj -> obj.equals(StorageClass.ReducedRedundancy.toString())), 
+	GLACIER(obj -> obj.equals(StorageClass.Glacier.toString())), 
+	NO_FILTER(obj -> obj.equals(obj));
 
 	private Function<String, Boolean> filter;
 
