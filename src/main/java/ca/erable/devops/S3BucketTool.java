@@ -65,13 +65,20 @@ public class S3BucketTool {
                 List<BucketReport> allReports = analyser.getAllReports();
 
                 if (groupByRegion) {
+                    // Bucketed hashmap. Chaque clef comprend une liste.
                     Map<Regions, List<BucketReport>> groupedByRegion = allReports.stream().collect(Collectors.groupingBy(BucketReport::getBucketLocation));
                     for (Regions region : groupedByRegion.keySet()) {
                         System.out.println(region.toString());
-                        groupedByRegion.get(region).stream().forEach(BucketReport::show);
+                        List<BucketReport> list = groupedByRegion.get(region);
+                        for (BucketReport rep : list) {
+                            rep.show(humanReadable);
+                        }
+
                     }
                 } else {
-                    allReports.stream().forEach(report -> report.show());
+                    for (BucketReport rep : allReports) {
+                        rep.show(humanReadable);
+                    }
                 }
 
             }
