@@ -41,17 +41,14 @@ public class BucketsAnalyser {
         for (Bucket bucket : bucketList) {
             List<S3ObjectSummary> objects = awsS3.listObject(bucket.getName());
             Regions bucketLocation = awsS3.getBucketLocation(bucket.getName());
+
             List<S3ObjectSummary> filteredObject = objects.stream().filter(obj -> byStorage.isFiltred(obj)).collect(Collectors.toList());
             BucketReport bucketReport = new BucketReport(bucket.getName(), bucket.getCreationDate(), bucketLocation, filteredObject);
+
             reports.add(bucketReport);
         }
     }
 
-    /**
-     * Applique un filtre base sur le type de systeme de fichier
-     * 
-     * @param storageFilter
-     */
     public void analyseBuckets(StorageFilter storageFilter) {
         byStorage = storageFilter;
         analyse();

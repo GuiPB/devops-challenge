@@ -30,12 +30,12 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     public List<Bucket> listBuckets() {
         List<Bucket> listBuckets = defaultClient.listBuckets();
         // Pour chaque bucket, constuire un client avec la bonne region.
-        listBuckets.stream().forEach((bucket -> {
+        listBuckets.stream().forEach(bucket -> {
             String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
             Regions bucketRegion = Regions.fromName(bucketLocation);
             locationByBucket.put(bucket.getName(), bucketRegion);
             clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withRegion(bucketRegion).build());
-        }));
+        });
 
         return listBuckets;
     }
