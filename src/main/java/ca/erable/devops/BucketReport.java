@@ -121,7 +121,7 @@ public class BucketReport {
     }
 
     public void show() {
-        System.out.println("Bucket name: " + getName());
+        System.out.println("name: " + getName());
         System.out.println("location: " + getBucketLocation().toString());
         System.out.println("creation date: " + getCreationDate());
         System.out.println("last modified: " + getLastModifiedDate());
@@ -138,7 +138,7 @@ public class BucketReport {
     }
 
     public void showHumanReadable() {
-        System.out.println("Bucket name: " + getName());
+        System.out.println("name: " + getName());
         System.out.println("location: " + getBucketLocation().toString());
         System.out.println("creation date: " + getCreationDate());
         System.out.println("last modified: " + getLastModifiedDate());
