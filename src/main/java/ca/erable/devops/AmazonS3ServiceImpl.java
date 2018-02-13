@@ -17,13 +17,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     private AmazonS3 defaultClient;
     private Map<String, Regions> locationByBucket = new HashMap<>();
     private Map<String, AmazonS3> clientsByBucket = new HashMap<>();
+    private AmazonS3ClientBuilder clientBuilder;
 
-    public AmazonS3ServiceImpl(Regions region) {
-        defaultClient = AmazonS3ClientBuilder.standard().withRegion(region).build();
-    }
-
-    public AmazonS3ServiceImpl() {
-        defaultClient = AmazonS3ClientBuilder.standard().withRegion(Regions.DEFAULT_REGION).build();
+    public AmazonS3ServiceImpl(AmazonS3ClientBuilder clientBuilderParam) {
+        defaultClient = clientBuilderParam.build();
+        clientBuilder = clientBuilderParam;
     }
 
     @Override
@@ -34,7 +32,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
             String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
             Regions bucketRegion = Regions.fromName(bucketLocation);
             locationByBucket.put(bucket.getName(), bucketRegion);
-            clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withRegion(bucketRegion).build());
+            clientsByBucket.put(bucket.getName(), clientBuilder.withRegion(bucketRegion).build());
         });
 
         return listBuckets;

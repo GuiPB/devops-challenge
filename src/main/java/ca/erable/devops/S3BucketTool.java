@@ -13,6 +13,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 public class S3BucketTool {
 
@@ -56,7 +57,8 @@ public class S3BucketTool {
                     pattern = line.getOptionValue("regex");
                 }
 
-                AmazonS3Service service = new AmazonS3ServiceImpl();
+                AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard().withRegion(Regions.DEFAULT_REGION);
+                AmazonS3Service service = new AmazonS3ServiceImpl(clientBuilder);
 
                 BucketsAnalyser analyser = new BucketsAnalyser(service);
 
