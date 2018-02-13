@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.model.Bucket;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class BucketsAnalyser {
 
@@ -39,11 +38,9 @@ public class BucketsAnalyser {
         bucketList = awsS3.listBuckets().stream().filter(bucket -> bucketNameMatches.test(bucket.getName())).collect(Collectors.toList());
 
         for (Bucket bucket : bucketList) {
-            List<S3ObjectSummary> objects = awsS3.listObject(bucket.getName());
             Regions bucketLocation = awsS3.getBucketLocation(bucket.getName());
 
-            List<S3ObjectSummary> filteredObject = objects.stream().filter(obj -> byStorage.isFiltred(obj)).collect(Collectors.toList());
-            BucketReport bucketReport = new BucketReport(bucket.getName(), bucket.getCreationDate(), bucketLocation, filteredObject);
+            BucketReport bucketReport = awsS3.reportOnBucket(bucket.getName());
 
             reports.add(bucketReport);
         }

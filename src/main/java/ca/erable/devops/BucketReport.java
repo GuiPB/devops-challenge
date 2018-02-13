@@ -1,10 +1,8 @@
 package ca.erable.devops;
 
 import java.util.Date;
-import java.util.List;
 
 import com.amazonaws.regions.Regions;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class BucketReport {
 
@@ -15,14 +13,12 @@ public class BucketReport {
     private Date lastModifiedDate = null;
     private Regions bucketLocation = Regions.DEFAULT_REGION;
 
-    public BucketReport(String name, Date creationDate, Regions bucketLocation, List<S3ObjectSummary> objects) {
+    public BucketReport(String name, Date creationDate, Regions bucketLocation, Integer fileCountParam, Long totalFileSizeParam, Date lastModifiedParam) {
         this.name = name;
         this.creationDate = creationDate;
-        if (objects != null && !objects.isEmpty()) {
-            this.fileCount = objects.size();
-            this.totalFileSize = objects.stream().mapToLong(S3ObjectSummary::getSize).sum();
-            this.lastModifiedDate = objects.stream().sorted((f, g) -> g.getLastModified().compareTo(f.getLastModified())).findFirst().get().getLastModified();
-        }
+        this.fileCount = fileCountParam;
+        this.totalFileSize = totalFileSizeParam;
+        this.lastModifiedDate = lastModifiedParam;
         this.bucketLocation = bucketLocation;
     }
 

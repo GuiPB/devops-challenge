@@ -41,7 +41,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     }
 
     @Override
-    public List<S3ObjectSummary> listObject(String bucketName) {
+    public BucketReport reportOnBucket(String bucketName) {
         AmazonS3 clientForBucket = clientsByBucket.get(bucketName);
         ObjectListing listObjects = clientForBucket.listObjects(bucketName);
 
@@ -54,7 +54,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
             objects.addAll(listNextBatchOfObjects.getObjectSummaries());
         }
 
-        return objects;
+        return null;
     }
 
     @Override
