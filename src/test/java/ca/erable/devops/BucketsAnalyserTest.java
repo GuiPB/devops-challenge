@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -18,8 +17,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.Owner;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.services.s3.model.StorageClass;
 
 @RunWith(MockitoJUnitRunner.class)
 public class BucketsAnalyserTest {
@@ -79,6 +76,7 @@ public class BucketsAnalyserTest {
         BucketReport simulatedReport = new BucketReport(bucketName, null, Regions.DEFAULT_REGION, null, null, null);
 
         Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(simulatedBucket));
+        Mockito.when(s3Service.reportOnBucket(bucketName, StorageFilter.NO_FILTER)).thenReturn(new BucketReport(bucketName, null, null, null, null, null));
 
         BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
         analyser.analyse();
@@ -100,33 +98,6 @@ public class BucketsAnalyserTest {
         BucketReport actualReport = analyser.report("");
 
         assertTrue(actualReport == null);
-    }
-
-    @Test
-    public void givenStorageStandard_thenAnalyseOnlyStandard() {
-        String bucketName = "ca.erable.boisclair";
-
-        Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket(bucketName)));
-        ArrayList<S3ObjectSummary> objSum = new ArrayList<>();
-
-        S3ObjectSummary rrStorageType = new S3ObjectSummary();
-        rrStorageType.setStorageClass(StorageClass.ReducedRedundancy.toString());
-        rrStorageType.setLastModified(new Date());
-        objSum.add(rrStorageType);
-
-        S3ObjectSummary standardStorageType = new S3ObjectSummary();
-        standardStorageType.setStorageClass(StorageClass.Standard.toString());
-        standardStorageType.setLastModified(new Date());
-        objSum.add(standardStorageType);
-
-        Mockito.when(s3Service.reportOnBucket(Mockito.anyString())).thenReturn(new BucketReport(bucketName, new Date(), Regions.AP_NORTHEAST_1, null, null, null));
-
-        BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
-        analyser.analyseBuckets(StorageFilter.STANDARD);
-
-        BucketReport report = analyser.report("ca.erable.boisclair");
-
-        assertTrue(1 == report.getFileCount());
     }
 
     @Test

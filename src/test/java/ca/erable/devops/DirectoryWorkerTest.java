@@ -32,7 +32,7 @@ public class DirectoryWorkerTest {
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
 
         DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
-        directoryWorker.work();
+        directoryWorker.call();
         assertFalse(directoryWorker.hasPrefixes());
     }
 
@@ -45,7 +45,7 @@ public class DirectoryWorkerTest {
         value.setCommonPrefixes(commonPrefixes);
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
         DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
-        directoryWorker.work();
+        directoryWorker.call();
         assertTrue(directoryWorker.hasPrefixes());
     }
 
@@ -60,9 +60,9 @@ public class DirectoryWorkerTest {
 
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
         DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
-        directoryWorker.work();
+        directoryWorker.call();
         DirectoryResult result = directoryWorker.getResult();
-        assertTrue(result.fileCount() == 1);
+        assertTrue(result.getFileCount() == 1);
     }
 
     @Test
@@ -72,9 +72,9 @@ public class DirectoryWorkerTest {
 
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
         DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
-        directoryWorker.work();
+        directoryWorker.call();
         DirectoryResult result = directoryWorker.getResult();
-        assertTrue(result.fileCount() == 0);
+        assertTrue(result.getFileCount() == 0);
     }
 
     @Test
@@ -98,13 +98,13 @@ public class DirectoryWorkerTest {
         Mockito.when(client.listNextBatchOfObjects(truncated)).thenReturn(notTruncated);
 
         DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
-        directoryWorker.work();
+        directoryWorker.call();
 
         Mockito.verify(client).listNextBatchOfObjects(Mockito.any(ObjectListing.class));
 
         DirectoryResult result = directoryWorker.getResult();
 
-        assertTrue(2 == result.fileCount());
-        assertTrue(32 == result.fileSize());
+        assertTrue(2 == result.getFileCount());
+        assertTrue(32 == result.getFileSize());
     }
 }

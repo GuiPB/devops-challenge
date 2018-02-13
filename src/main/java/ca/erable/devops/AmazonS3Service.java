@@ -8,7 +8,9 @@ import com.amazonaws.services.s3.model.Bucket;
 public interface AmazonS3Service {
     List<Bucket> listBuckets();
 
-    BucketReport reportOnBucket(String bucketName);
-
     Regions getBucketLocation(String bucketName);
+
+    BucketReport reportOnBucket(String name, StorageFilter byStorage);
+
+    BucketReport reportOnBucket(String string);
 }

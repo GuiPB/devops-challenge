@@ -1,14 +1,14 @@
 package ca.erable.devops;
 
-import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
-public class DirectoryWorker {
+public class DirectoryWorker implements Callable<DirectoryResult> {
 
     private String prefix;
     private AmazonS3 client;
@@ -25,7 +25,16 @@ public class DirectoryWorker {
         this.filter = filterBy;
     }
 
-    public void work() {
+    public boolean hasPrefixes() {
+        return !commonPrefixes.isEmpty();
+    }
+
+    public DirectoryResult getResult() {
+        return new DirectoryResult(fileCount, totalFileSize, commonPrefixes);
+    }
+
+    @Override
+    public DirectoryResult call() {
         ObjectListing listObjects = client.listObjects(new ListObjectsRequest(bucket, prefix, null, "/", null));
         commonPrefixes = listObjects.getCommonPrefixes();
 
@@ -41,17 +50,7 @@ public class DirectoryWorker {
             fileCount += listObjects.getObjectSummaries().size();
             totalFileSize += listObjects.getObjectSummaries().stream().mapToLong(S3ObjectSummary::getSize).sum();
         }
-    }
 
-    public boolean hasPrefixes() {
-        return !commonPrefixes.isEmpty();
-    }
-
-    public List<String> getCommonPrefixes() {
-        return Collections.unmodifiableList(commonPrefixes);
-    }
-
-    public DirectoryResult getResult() {
-        return new DirectoryResult(fileCount, totalFileSize);
+        return getResult();
     }
 }

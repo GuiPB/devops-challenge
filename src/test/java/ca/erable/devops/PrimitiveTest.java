@@ -1,6 +1,8 @@
 package ca.erable.devops;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.junit.Test;
 
@@ -40,12 +42,16 @@ public class PrimitiveTest {
 
         long start = System.currentTimeMillis();
 
-        ObjectListing listObjects = defaultClient.listObjects(new ListObjectsRequest("ca.erable.boisclair", "dossier2/", null, "/", null));
-        System.out.println("Common prefixes: " + listObjects.getCommonPrefixes());
+        ObjectListing listObjects = defaultClient.listObjects(new ListObjectsRequest("bucket1", null, null, "/", null));
+        List<String> commonPrefixes = listObjects.getCommonPrefixes();
+        System.out.println("Common prefixes: " + commonPrefixes);
 
-        // ExecutorService threadPool = Executors.newFixedThreadPool(10);
+        ExecutorService threadPool = Executors.newFixedThreadPool(10);
 
-        // threadPool.
+        commonPrefixes.forEach(prefix -> {
+            ObjectListing listObjects2 = defaultClient.listObjects(new ListObjectsRequest("bucket1", prefix, null, "/", null));
+            System.out.println(listObjects2.getCommonPrefixes());
+        });
 
         fileCount += listObjects.getObjectSummaries().size();
         totalFileSize += listObjects.getObjectSummaries().parallelStream().mapToLong(S3ObjectSummary::getSize).sum();
