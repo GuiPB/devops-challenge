@@ -1,9 +1,12 @@
 package ca.erable.devops;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -145,5 +148,29 @@ public class DirectoryWorkerTest {
 
         assertTrue(2 == result.getFileCount());
         assertTrue(32 == result.getFileSize());
+    }
+
+    @Test
+    public void givenMultipleFiles_thenReturnLastModifiedForBucket() {
+        ArrayList<S3ObjectSummary> returnedObject = new ArrayList<S3ObjectSummary>();
+
+        Calendar instance = Calendar.getInstance();
+        instance.set(2000, Calendar.JANUARY, 1);
+        Date januaryFirst2000 = instance.getTime();
+
+        instance.set(2000, Calendar.JANUARY, 2);
+        Date januarySecond2000 = instance.getTime();
+
+        S3ObjectSummary firstObject = new S3ObjectSummary();
+        firstObject.setLastModified(januarySecond2000);
+        returnedObject.add(firstObject);
+
+        S3ObjectSummary secondObject = new S3ObjectSummary();
+        secondObject.setLastModified(januaryFirst2000);
+        returnedObject.add(secondObject);
+
+        DirectoryWorker worker = new DirectoryWorker("pref", client, "test", StorageFilter.NO_FILTER);
+
+        assertEquals(januarySecond2000, worker.getLastModifiedDate());
     }
 }
