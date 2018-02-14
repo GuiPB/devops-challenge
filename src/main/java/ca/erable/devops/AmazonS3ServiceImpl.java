@@ -15,9 +15,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.AnonymousAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -50,8 +47,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
             Regions bucketRegion = Regions.DEFAULT_REGION;
             log.debug(() -> "Region " + bucketLocation + " for bucket " + bucket.getName());
             locationByBucket.put(bucket.getName(), bucketRegion);
-            clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
-                    .withEndpointConfiguration(new EndpointConfiguration("http://localhost:8080", "us-west-2")).enablePathStyleAccess().build());
+            clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withRegion(bucketRegion).build());
         });
 
         return listBuckets;
@@ -59,6 +55,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
     @Override
     public BucketReport reportOnBucket(String bucketName, StorageFilter byStorage) throws InterruptedException {
+        log.debug(() -> "Report on bucket " + bucketName);
         AmazonS3 clientForBucket = clientsByBucket.get(bucketName);
 
         log.debug(() -> "Listing bucket root with delimiter '/'");

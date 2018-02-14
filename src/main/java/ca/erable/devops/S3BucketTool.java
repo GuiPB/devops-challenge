@@ -12,9 +12,6 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.AnonymousAWSCredentials;
-import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
@@ -60,11 +57,7 @@ public class S3BucketTool {
                     pattern = line.getOptionValue("regex");
                 }
 
-                AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
-                        .withEndpointConfiguration(new EndpointConfiguration("http://localhost:8080", "us-west-2")).enablePathStyleAccess();
-
-                // AmazonS3ClientBuilder clientBuilder =
-                // AmazonS3ClientBuilder.standard().withRegion(Regions.DEFAULT_REGION);
+                AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard().withRegion(Regions.DEFAULT_REGION);
 
                 AmazonS3Service service = new AmazonS3ServiceImpl(clientBuilder);
 
