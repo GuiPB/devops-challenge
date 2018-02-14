@@ -6,7 +6,7 @@
     </Console>
   </Appenders>
   <Loggers>
-    <Logger name="ca.erable.devops" level="error" additivity="false">
+    <Logger name="ca.erable.devops" level="debug" additivity="false">
       <AppenderRef ref="Console" />
     </Logger>
     <Root level="error">

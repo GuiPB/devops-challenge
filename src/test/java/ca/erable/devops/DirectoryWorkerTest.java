@@ -15,12 +15,18 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.StorageClass;
 
 @RunWith(MockitoJUnitRunner.class)
 public class DirectoryWorkerTest {
 
     @Mock
     private AmazonS3 client;
+
+    @Test(expected = IllegalArgumentException.class)
+    public void givenWrongParams_thenThrow() {
+        DirectoryWorker directoryWorker = new DirectoryWorker("", client, "", null);
+    }
 
     @Test
     public void givenNoNewPrefix_thenHasPrefixesFalse() {
@@ -31,7 +37,7 @@ public class DirectoryWorkerTest {
         value.setCommonPrefixes(new ArrayList<>());
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
 
-        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
+        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "notEmpty", StorageFilter.NO_FILTER);
         directoryWorker.call();
         assertFalse(directoryWorker.hasPrefixes());
     }
@@ -44,7 +50,7 @@ public class DirectoryWorkerTest {
         commonPrefixes.add("prefix");
         value.setCommonPrefixes(commonPrefixes);
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
-        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
+        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "test", StorageFilter.NO_FILTER);
         directoryWorker.call();
         assertTrue(directoryWorker.hasPrefixes());
     }
@@ -56,10 +62,11 @@ public class DirectoryWorkerTest {
 
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
         s3ObjectSummary.setSize(16L);
+        s3ObjectSummary.setStorageClass(StorageClass.Standard.toString());
         value.getObjectSummaries().add(s3ObjectSummary);
 
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
-        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
+        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "test", StorageFilter.NO_FILTER);
         directoryWorker.call();
         DirectoryResult result = directoryWorker.getResult();
         assertTrue(result.getFileCount() == 1);
@@ -71,10 +78,41 @@ public class DirectoryWorkerTest {
         ObjectListing value = new ObjectListing();
 
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
-        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
+        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "test", StorageFilter.NO_FILTER);
         directoryWorker.call();
         DirectoryResult result = directoryWorker.getResult();
         assertTrue(result.getFileCount() == 0);
+    }
+
+    @Test
+    public void givenGlacierFilterApplied_thenReturnZero() {
+
+        String prefix = "pre";
+        ObjectListing notTruncated = new ObjectListing();
+        notTruncated.setTruncated(false);
+
+        ObjectListing truncated = new ObjectListing();
+        truncated.setTruncated(true);
+
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setSize(16L);
+        s3ObjectSummary.setStorageClass(StorageClass.Standard.toString());
+
+        truncated.getObjectSummaries().add(s3ObjectSummary);
+        notTruncated.getObjectSummaries().add(s3ObjectSummary);
+
+        Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(truncated);
+
+        Mockito.when(client.listNextBatchOfObjects(truncated)).thenReturn(notTruncated);
+
+        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "test", StorageFilter.GLACIER);
+        directoryWorker.call();
+
+        Mockito.verify(client).listNextBatchOfObjects(Mockito.any(ObjectListing.class));
+
+        DirectoryResult result = directoryWorker.getResult();
+
+        assertTrue(0 == result.getFileCount());
     }
 
     @Test
@@ -89,6 +127,7 @@ public class DirectoryWorkerTest {
 
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
         s3ObjectSummary.setSize(16L);
+        s3ObjectSummary.setStorageClass(StorageClass.Standard.toString());
 
         truncated.getObjectSummaries().add(s3ObjectSummary);
         notTruncated.getObjectSummaries().add(s3ObjectSummary);
@@ -97,7 +136,7 @@ public class DirectoryWorkerTest {
 
         Mockito.when(client.listNextBatchOfObjects(truncated)).thenReturn(notTruncated);
 
-        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "", null);
+        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "test", StorageFilter.NO_FILTER);
         directoryWorker.call();
 
         Mockito.verify(client).listNextBatchOfObjects(Mockito.any(ObjectListing.class));

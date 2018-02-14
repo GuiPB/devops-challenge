@@ -67,33 +67,48 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         List<String> commonPrefixes = rootListObjects.getCommonPrefixes();
         log.debug(() -> "Common prefixes: " + String.join(",", commonPrefixes));
 
-        ExecutorService executor = Executors.newCachedThreadPool();
         List<DirectoryWorker> workers = new ArrayList<>();
-
-        for (String prefix : commonPrefixes) {
-            workers.add(new DirectoryWorker(prefix, clientForBucket, bucketName, byStorage));
-            log.debug(() -> "Worker added on prefix: " + prefix + " and bucket " + bucketName);
-        }
-
         List<DirectoryResult> collectedStats = new ArrayList<>();
 
-        try {
-            collectedStats = executor.invokeAll(workers).stream().map(wk -> {
-                try {
-                    return wk.get();
-                } catch (InterruptedException | ExecutionException e) {
-                    throw new IllegalStateException();
-                }
-            }).collect(toList());
+        while (!commonPrefixes.isEmpty()) {
 
-        } catch (InterruptedException interup) {
-            log.error(() -> interup.getMessage());
-            executor.shutdownNow();
-            throw new IllegalStateException();
-        } finally {
+            ExecutorService executor = Executors.newFixedThreadPool(10);
+            List<DirectoryResult> newResults = new ArrayList<>();
+
+            for (String prefix : commonPrefixes) {
+                workers.add(new DirectoryWorker(prefix, clientForBucket, bucketName, byStorage));
+                log.debug(() -> "Worker added on prefix: " + prefix + " and bucket " + bucketName);
+            }
+            try {
+                newResults = executor.invokeAll(workers).stream().map(wk -> {
+                    try {
+                        return wk.get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new IllegalStateException();
+                    }
+                }).collect(toList());
+
+            } catch (InterruptedException interup) {
+                log.error(() -> interup.getMessage());
+                executor.shutdownNow();
+                throw new IllegalStateException();
+            }
+
             executor.shutdown();
             log.debug(() -> "Awaiting termination for all workers");
             executor.awaitTermination(5, TimeUnit.HOURS);
+
+            commonPrefixes.clear();
+            List<List<String>> collectedNewPrefixes = newResults.stream().map(t -> t.getCommonPrefixes()).filter(l -> !l.isEmpty()).collect(toList());
+
+            for (List<String> prefList : collectedNewPrefixes) {
+                commonPrefixes.addAll(prefList);
+            }
+
+            log.debug(() -> "New prefixes to process: " + String.join(",", commonPrefixes));
+            collectedStats.addAll(newResults);
+            log.debug("Clearing workers");
+            workers.clear();
         }
 
         List<S3ObjectSummary> objects = new ArrayList<>();

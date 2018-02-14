@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -24,6 +25,9 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
     private Integer fileCount;
 
     public DirectoryWorker(String prefix, AmazonS3 client, String bucket, StorageFilter filterBy) {
+        if (StringUtils.isBlank(bucket) || StringUtils.isBlank(bucket) || client == null || filterBy == null) {
+            throw new IllegalArgumentException("Invalid parameter for worker");
+        }
         this.prefix = prefix;
         this.client = client;
         this.bucket = bucket;

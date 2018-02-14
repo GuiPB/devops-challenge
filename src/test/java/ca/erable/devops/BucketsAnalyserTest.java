@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
@@ -104,7 +103,6 @@ public class BucketsAnalyserTest {
     public void givenAPatternIsProvided_thenListObjetOnlyOnFilteredBucket() throws InterruptedException {
         Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket("ca.erable.boisclair"), new Bucket("ca.erable.boisclair2"), new Bucket("ca.era.boisclair")));
 
-        Mockito.when(s3Service.reportOnBucket(Mockito.anyString())).thenReturn(new BucketReport("ca.erable.boisclair", new Date(), Regions.AP_NORTHEAST_1, null, null, null));
         BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
         analyser.analyseBuckets("ca.erable.*");
 
