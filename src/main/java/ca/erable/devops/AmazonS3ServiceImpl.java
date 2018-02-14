@@ -44,10 +44,10 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         log.debug(() -> "Creating a client for each bucket");
         listBuckets.stream().forEach(bucket -> {
             String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
-            Regions bucketRegion = Regions.DEFAULT_REGION;
+            Regions bucketRegion = Regions.fromName(bucketLocation);
             log.debug(() -> "Region " + bucketLocation + " for bucket " + bucket.getName());
             locationByBucket.put(bucket.getName(), bucketRegion);
-            clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withRegion(bucketRegion).build());
+            clientsByBucket.put(bucket.getName(), clientBuilder.withRegion(bucketRegion).build());
         });
 
         return listBuckets;
