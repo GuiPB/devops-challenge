@@ -30,6 +30,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     private Map<String, Regions> locationByBucket = new HashMap<>();
     private Map<String, AmazonS3> clientsByBucket = new HashMap<>();
     private AmazonS3ClientBuilder clientBuilder;
+    private Map<String, Bucket> buckets = new HashMap<>();
 
     public AmazonS3ServiceImpl(AmazonS3ClientBuilder clientBuilderParam) {
         defaultClient = clientBuilderParam.build();
@@ -48,13 +49,14 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
             log.debug(() -> "Region " + bucketLocation + " for bucket " + bucket.getName());
             locationByBucket.put(bucket.getName(), bucketRegion);
             clientsByBucket.put(bucket.getName(), clientBuilder.withRegion(bucketRegion).build());
+            buckets.put(bucket.getName(), bucket);
         });
 
         return listBuckets;
     }
 
     @Override
-    public BucketReport reportOnBucket(String bucketName, StorageFilter byStorage) throws InterruptedException {
+    public BucketReport reportOnBucket(String bucketName, StorageFilter byStorage) {
         log.debug(() -> "Report on bucket " + bucketName);
         AmazonS3 clientForBucket = clientsByBucket.get(bucketName);
 
@@ -93,7 +95,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
             executor.shutdown();
             log.debug(() -> "Awaiting termination for all workers");
-            executor.awaitTermination(5, TimeUnit.HOURS);
+            try {
+                executor.awaitTermination(5, TimeUnit.HOURS);
+            } catch (InterruptedException e) {
+                log.error("Error while awaiting termination", e);
+            }
 
             commonPrefixes.clear();
             List<List<String>> collectedNewPrefixes = newResults.stream().map(t -> t.getCommonPrefixes()).filter(l -> !l.isEmpty()).collect(toList());
@@ -124,11 +130,11 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         Integer numberOfFile = collectedStats.parallelStream().mapToInt(DirectoryResult::getFileCount).sum();
         numberOfFile += objects.size();
 
-        return new BucketReport(bucketName, new Date(), Regions.AP_NORTHEAST_1, numberOfFile, totalSize, new Date());
+        return new BucketReport(bucketName, buckets.get(bucketName).getCreationDate(), locationByBucket.get(bucketName), numberOfFile, totalSize, new Date());
     }
 
     @Override
-    public BucketReport reportOnBucket(String string) throws InterruptedException {
+    public BucketReport reportOnBucket(String string) {
         return reportOnBucket(string, StorageFilter.NO_FILTER);
     }
 

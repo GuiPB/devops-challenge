@@ -1,8 +1,9 @@
 package ca.erable.devops;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.List;
 import java.util.concurrent.Callable;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -53,14 +54,14 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
         totalFileSize = new Long(0);
         fileCount = new Integer(0);
 
-        List<S3ObjectSummary> objectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(Collectors.toList());
+        List<S3ObjectSummary> objectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(toList());
         fileCount += objectSummaries.size();
         totalFileSize += objectSummaries.stream().mapToLong(S3ObjectSummary::getSize).sum();
 
         while (listObjects.isTruncated()) {
             log.debug(() -> "DirectoryWorker on prefix [" + prefix + "] in bucket " + bucket + ". Truncation detected. Fetching next batch.");
             listObjects = client.listNextBatchOfObjects(listObjects);
-            List<S3ObjectSummary> nextObjectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(Collectors.toList());
+            List<S3ObjectSummary> nextObjectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(toList());
             fileCount += nextObjectSummaries.size();
             totalFileSize += nextObjectSummaries.stream().mapToLong(S3ObjectSummary::getSize).sum();
         }

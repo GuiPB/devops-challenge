@@ -39,6 +39,7 @@ public class BucketsAnalyser {
 
         for (Bucket bucket : bucketList) {
             BucketReport bucketReport = awsS3.reportOnBucket(bucket.getName(), byStorage);
+
             reports.put(bucket.getName(), bucketReport);
         }
     }

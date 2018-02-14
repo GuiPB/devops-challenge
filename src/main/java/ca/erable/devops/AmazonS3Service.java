@@ -10,7 +10,7 @@ public interface AmazonS3Service {
 
     Regions getBucketLocation(String bucketName);
 
-    BucketReport reportOnBucket(String name, StorageFilter byStorage) throws InterruptedException;
+    BucketReport reportOnBucket(String name, StorageFilter byStorage);
 
-    BucketReport reportOnBucket(String string) throws InterruptedException;
+    BucketReport reportOnBucket(String string);
 }
