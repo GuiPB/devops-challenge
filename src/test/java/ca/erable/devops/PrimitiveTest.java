@@ -9,12 +9,12 @@ import org.junit.Test;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.AnonymousAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
-import com.amazonaws.services.s3.model.Region;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 // -ea -Daws.accessKeyId=AKIAI7E35P2JWVFTBU6A -Daws.secretKey=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
@@ -24,7 +24,7 @@ public class PrimitiveTest {
     @Test
     public void test() {
         AmazonS3 defaultClient = AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
-                .withEndpointConfiguration(new EndpointConfiguration("http://localhost:8080", Region.US_East_2.getFirstRegionId())).enablePathStyleAccess().build();
+                .withEndpointConfiguration(new EndpointConfiguration("http://localhost:8080", Regions.DEFAULT_REGION.toString())).enablePathStyleAccess().build();
 
         // defaultClient.createBucket("bucket1");
 

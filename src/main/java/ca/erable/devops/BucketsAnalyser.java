@@ -33,7 +33,7 @@ public class BucketsAnalyser {
         return reports.get(bucketName);
     }
 
-    public void analyse() {
+    public void analyse() throws InterruptedException {
         // Appliquer le filtre de nom optionnel.
         bucketList = awsS3.listBuckets().stream().filter(bucket -> bucketNameMatches.test(bucket.getName())).collect(Collectors.toList());
 
@@ -43,17 +43,17 @@ public class BucketsAnalyser {
         }
     }
 
-    public void analyseBuckets(StorageFilter storageFilter) {
+    public void analyseBuckets(StorageFilter storageFilter) throws InterruptedException {
         byStorage = storageFilter;
         analyse();
     }
 
-    public void analyseBuckets(String pattern) {
+    public void analyseBuckets(String pattern) throws InterruptedException {
         bucketNameMatches = Pattern.compile(pattern).asPredicate();
         analyse();
     }
 
-    public void analyseBuckets(StorageFilter storageFilter, String pattern) {
+    public void analyseBuckets(StorageFilter storageFilter, String pattern) throws InterruptedException {
         byStorage = storageFilter;
         bucketNameMatches = Pattern.compile(pattern).asPredicate();
         analyse();

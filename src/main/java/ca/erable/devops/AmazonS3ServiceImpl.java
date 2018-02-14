@@ -1,5 +1,7 @@
 package ca.erable.devops;
 
+import static java.util.stream.Collectors.toList;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -8,8 +10,14 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.AnonymousAWSCredentials;
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
@@ -20,6 +28,7 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class AmazonS3ServiceImpl implements AmazonS3Service {
 
+    private static Logger log = LogManager.getLogger(AmazonS3ServiceImpl.class);
     private AmazonS3 defaultClient;
     private Map<String, Regions> locationByBucket = new HashMap<>();
     private Map<String, AmazonS3> clientsByBucket = new HashMap<>();
@@ -35,29 +44,35 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         List<Bucket> listBuckets = defaultClient.listBuckets();
 
         // Pour chaque bucket, constuire un client avec la bonne region.
+        log.debug(() -> "Creating a client for each bucket");
         listBuckets.stream().forEach(bucket -> {
             String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
-            Regions bucketRegion = Regions.fromName(bucketLocation);
+            Regions bucketRegion = Regions.DEFAULT_REGION;
+            log.debug(() -> "Region " + bucketLocation + " for bucket " + bucket.getName());
             locationByBucket.put(bucket.getName(), bucketRegion);
-            clientsByBucket.put(bucket.getName(), clientBuilder.withRegion(bucketRegion).build());
+            clientsByBucket.put(bucket.getName(), AmazonS3ClientBuilder.standard().withCredentials(new AWSStaticCredentialsProvider(new AnonymousAWSCredentials()))
+                    .withEndpointConfiguration(new EndpointConfiguration("http://localhost:8080", "us-west-2")).enablePathStyleAccess().build());
         });
 
         return listBuckets;
     }
 
     @Override
-    public BucketReport reportOnBucket(String bucketName, StorageFilter byStorage) {
+    public BucketReport reportOnBucket(String bucketName, StorageFilter byStorage) throws InterruptedException {
         AmazonS3 clientForBucket = clientsByBucket.get(bucketName);
 
-        ObjectListing listObjects = clientForBucket.listObjects(new ListObjectsRequest(bucketName, null, null, "/", null));
+        log.debug(() -> "Listing bucket root with delimiter '/'");
+        ObjectListing rootListObjects = clientForBucket.listObjects(new ListObjectsRequest(bucketName, null, null, "/", null));
 
-        List<String> commonPrefixes = listObjects.getCommonPrefixes();
+        List<String> commonPrefixes = rootListObjects.getCommonPrefixes();
+        log.debug(() -> "Common prefixes: " + String.join(",", commonPrefixes));
 
         ExecutorService executor = Executors.newCachedThreadPool();
         List<DirectoryWorker> workers = new ArrayList<>();
 
         for (String prefix : commonPrefixes) {
             workers.add(new DirectoryWorker(prefix, clientForBucket, bucketName, byStorage));
+            log.debug(() -> "Worker added on prefix: " + prefix + " and bucket " + bucketName);
         }
 
         List<DirectoryResult> collectedStats = new ArrayList<>();
@@ -69,30 +84,39 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
                 } catch (InterruptedException | ExecutionException e) {
                     throw new IllegalStateException();
                 }
-            }).collect(Collectors.toList());
+            }).collect(toList());
 
-        } catch (InterruptedException e1) {
+        } catch (InterruptedException interup) {
+            log.error(() -> interup.getMessage());
             executor.shutdownNow();
             throw new IllegalStateException();
+        } finally {
+            executor.shutdown();
+            log.debug(() -> "Awaiting termination for all workers");
+            executor.awaitTermination(5, TimeUnit.HOURS);
         }
 
         List<S3ObjectSummary> objects = new ArrayList<>();
+        objects.addAll(rootListObjects.getObjectSummaries().stream().filter(y -> byStorage.isFiltred(y)).collect(toList()));
 
-        objects.addAll(listObjects.getObjectSummaries());
-
-        while (listObjects.isTruncated()) {
-            ObjectListing listNextBatchOfObjects = clientForBucket.listNextBatchOfObjects(listObjects);
-            objects.addAll(listNextBatchOfObjects.getObjectSummaries());
+        while (rootListObjects.isTruncated()) {
+            log.debug(() -> "Truncation detected. Listing bucket on root directory");
+            rootListObjects = clientForBucket.listNextBatchOfObjects(rootListObjects);
+            objects.addAll(rootListObjects.getObjectSummaries().stream().filter(y -> byStorage.isFiltred(y)).collect(toList()));
         }
 
+        log.debug(() -> "Summerizing data");
         Long totalSize = collectedStats.parallelStream().mapToLong(DirectoryResult::getFileSize).sum();
         totalSize += objects.parallelStream().mapToLong(i -> i.getSize()).sum();
 
-        return new BucketReport(bucketName, new Date(), Regions.AP_NORTHEAST_1, 0, totalSize, new Date());
+        Integer numberOfFile = collectedStats.parallelStream().mapToInt(DirectoryResult::getFileCount).sum();
+        numberOfFile += objects.size();
+
+        return new BucketReport(bucketName, new Date(), Regions.AP_NORTHEAST_1, numberOfFile, totalSize, new Date());
     }
 
     @Override
-    public BucketReport reportOnBucket(String string) {
+    public BucketReport reportOnBucket(String string) throws InterruptedException {
         return reportOnBucket(string, StorageFilter.NO_FILTER);
     }
 

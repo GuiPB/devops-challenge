@@ -25,7 +25,7 @@ public class BucketsAnalyserTest {
     private AmazonS3Service s3Service;
 
     @Test
-    public void givenOneBucket_thenContainsBucketTrue() {
+    public void givenOneBucket_thenContainsBucketTrue() throws InterruptedException {
         String first = "ca.erable.boisclair";
 
         List<Bucket> expectedBuckets = Arrays.asList(new Bucket[] { new Bucket(first) });
@@ -39,7 +39,7 @@ public class BucketsAnalyserTest {
     }
 
     @Test
-    public void givenMultipleBucket_thenContainsAllTrue() {
+    public void givenMultipleBucket_thenContainsAllTrue() throws InterruptedException {
         String first = "ca.erable.boisclair";
         String second = "ca.erable.boisclair2";
 
@@ -54,7 +54,7 @@ public class BucketsAnalyserTest {
     }
 
     @Test
-    public void givenBucketDoesNotExist_thenReturnFalse() {
+    public void givenBucketDoesNotExist_thenReturnFalse() throws InterruptedException {
         String nonExistent = "nonExistent";
 
         List<Bucket> expectedBuckets = Arrays.asList(new Bucket[] { new Bucket("ca.erable"), new Bucket("ca.erable2") });
@@ -67,7 +67,7 @@ public class BucketsAnalyserTest {
     }
 
     @Test
-    public void givenABucketExists_thenReturnReport() {
+    public void givenABucketExists_thenReturnReport() throws InterruptedException {
         String bucketName = "ca.erable.boisclair";
 
         Bucket simulatedBucket = new Bucket(bucketName);
@@ -88,7 +88,7 @@ public class BucketsAnalyserTest {
     }
 
     @Test
-    public void givenABucketDoesNotExist_thenReturnEmptyReport() {
+    public void givenABucketDoesNotExist_thenReturnEmptyReport() throws InterruptedException {
         String bucketName = "ca.erable.boisclair";
 
         Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket(bucketName)));
@@ -101,7 +101,7 @@ public class BucketsAnalyserTest {
     }
 
     @Test
-    public void givenAPatternIsProvided_thenListObjetOnlyOnFilteredBucket() {
+    public void givenAPatternIsProvided_thenListObjetOnlyOnFilteredBucket() throws InterruptedException {
         Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(new Bucket("ca.erable.boisclair"), new Bucket("ca.erable.boisclair2"), new Bucket("ca.era.boisclair")));
 
         Mockito.when(s3Service.reportOnBucket(Mockito.anyString())).thenReturn(new BucketReport("ca.erable.boisclair", new Date(), Regions.AP_NORTHEAST_1, null, null, null));
