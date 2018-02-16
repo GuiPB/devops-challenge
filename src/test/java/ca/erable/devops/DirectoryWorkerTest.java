@@ -99,6 +99,29 @@ public class DirectoryWorkerTest {
         ObjectListing notTruncated = new ObjectListing();
         notTruncated.setTruncated(false);
 
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setLastModified(new Date());
+        s3ObjectSummary.setSize(16L);
+        s3ObjectSummary.setStorageClass(StorageClass.Standard.toString());
+
+        notTruncated.getObjectSummaries().add(s3ObjectSummary);
+
+        Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(notTruncated);
+
+        DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "test", StorageFilter.GLACIER);
+        directoryWorker.call();
+
+        DirectoryResult result = directoryWorker.getResult();
+
+        assertTrue(0 == result.getFileCount());
+    }
+
+    @Test
+    public void givenGlacierFilterApplied_thenReturnAfterTrucation() {
+        String prefix = "pre";
+        ObjectListing notTruncated = new ObjectListing();
+        notTruncated.setTruncated(false);
+
         ObjectListing truncated = new ObjectListing();
         truncated.setTruncated(true);
 
