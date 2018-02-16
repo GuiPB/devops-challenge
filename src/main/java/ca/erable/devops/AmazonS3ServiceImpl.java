@@ -127,15 +127,28 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         Long totalSize = collectedStats.parallelStream().mapToLong(DirectoryResult::getFileSize).sum();
         totalSize += objects.parallelStream().mapToLong(i -> i.getSize()).sum();
 
-        Date lastModifiedRootFolder = objects.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().get();
-        Date lastModifiedChildFolder = collectedStats.parallelStream().map(DirectoryResult::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().get();
+        Date lastModifiedRootFolder = objects.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
+        Date lastModifiedChildFolder = collectedStats.parallelStream().map(DirectoryResult::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
 
-        Date lastModified = lastModifiedChildFolder.after(lastModifiedRootFolder) ? lastModifiedChildFolder : lastModifiedRootFolder;
+        Date lastModified = chooseWichDate(lastModifiedRootFolder, lastModifiedChildFolder);
 
         Integer numberOfFile = collectedStats.parallelStream().mapToInt(DirectoryResult::getFileCount).sum();
         numberOfFile += objects.size();
 
         return new BucketReport(bucketName, buckets.get(bucketName).getCreationDate(), locationByBucket.get(bucketName), numberOfFile, totalSize, lastModified);
+    }
+
+    private Date chooseWichDate(Date lastModifiedRootFolder, Date lastModifiedChildFolder) {
+        Date lastModified = null;
+
+        if (lastModifiedChildFolder != null && lastModifiedRootFolder == null) {
+            return lastModifiedChildFolder;
+        } else if (lastModifiedChildFolder == null && lastModifiedRootFolder != null) {
+            return lastModifiedRootFolder;
+        } else if (lastModifiedChildFolder != null && lastModifiedRootFolder != null) {
+            lastModified = lastModifiedChildFolder.after(lastModifiedRootFolder) ? lastModifiedChildFolder : lastModifiedRootFolder;
+        }
+        return lastModified;
     }
 
     @Override
