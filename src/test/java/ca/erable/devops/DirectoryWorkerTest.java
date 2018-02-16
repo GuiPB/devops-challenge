@@ -38,6 +38,10 @@ public class DirectoryWorkerTest {
 
         ObjectListing value = new ObjectListing();
         value.setCommonPrefixes(new ArrayList<>());
+        S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setLastModified(new Date());
+        s3ObjectSummary.setStorageClass(StorageClass.Glacier.toString());
+        value.getObjectSummaries().add(s3ObjectSummary);
         Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
 
         DirectoryWorker directoryWorker = new DirectoryWorker(prefix, client, "notEmpty", StorageFilter.NO_FILTER);
@@ -64,6 +68,7 @@ public class DirectoryWorkerTest {
         ObjectListing value = new ObjectListing();
 
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setLastModified(new Date());
         s3ObjectSummary.setSize(16L);
         s3ObjectSummary.setStorageClass(StorageClass.Standard.toString());
         value.getObjectSummaries().add(s3ObjectSummary);
@@ -98,6 +103,7 @@ public class DirectoryWorkerTest {
         truncated.setTruncated(true);
 
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setLastModified(new Date());
         s3ObjectSummary.setSize(16L);
         s3ObjectSummary.setStorageClass(StorageClass.Standard.toString());
 
@@ -129,6 +135,7 @@ public class DirectoryWorkerTest {
         truncated.setTruncated(true);
 
         S3ObjectSummary s3ObjectSummary = new S3ObjectSummary();
+        s3ObjectSummary.setLastModified(new Date());
         s3ObjectSummary.setSize(16L);
         s3ObjectSummary.setStorageClass(StorageClass.Standard.toString());
 
@@ -152,7 +159,6 @@ public class DirectoryWorkerTest {
 
     @Test
     public void givenMultipleFiles_thenReturnLastModifiedForBucket() {
-        ArrayList<S3ObjectSummary> returnedObject = new ArrayList<S3ObjectSummary>();
 
         Calendar instance = Calendar.getInstance();
         instance.set(2000, Calendar.JANUARY, 1);
@@ -161,15 +167,57 @@ public class DirectoryWorkerTest {
         instance.set(2000, Calendar.JANUARY, 2);
         Date januarySecond2000 = instance.getTime();
 
-        S3ObjectSummary firstObject = new S3ObjectSummary();
-        firstObject.setLastModified(januarySecond2000);
-        returnedObject.add(firstObject);
+        S3ObjectSummary youngestObject = new S3ObjectSummary();
+        youngestObject.setLastModified(januarySecond2000);
+        youngestObject.setStorageClass(StorageClass.Glacier.toString());
 
-        S3ObjectSummary secondObject = new S3ObjectSummary();
-        secondObject.setLastModified(januaryFirst2000);
-        returnedObject.add(secondObject);
+        S3ObjectSummary oldestObject = new S3ObjectSummary();
+        oldestObject.setLastModified(januaryFirst2000);
+        oldestObject.setStorageClass(StorageClass.Glacier.toString());
+
+        ObjectListing value = new ObjectListing();
+
+        value.getObjectSummaries().add(youngestObject);
+        value.getObjectSummaries().add(oldestObject);
+
+        Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(value);
 
         DirectoryWorker worker = new DirectoryWorker("pref", client, "test", StorageFilter.NO_FILTER);
+        worker.call();
+
+        assertEquals(januarySecond2000, worker.getLastModifiedDate());
+    }
+
+    @Test
+    public void givenMultipleFilesAndListingtruncated_thenReturnLastModifiedForBucket() {
+        Calendar instance = Calendar.getInstance();
+        instance.set(2000, Calendar.JANUARY, 1);
+        Date januaryFirst2000 = instance.getTime();
+
+        instance.set(2000, Calendar.JANUARY, 2);
+        Date januarySecond2000 = instance.getTime();
+
+        S3ObjectSummary youngestObject = new S3ObjectSummary();
+        youngestObject.setLastModified(januarySecond2000);
+        youngestObject.setStorageClass(StorageClass.Glacier.toString());
+
+        S3ObjectSummary oldestObject = new S3ObjectSummary();
+        oldestObject.setLastModified(januaryFirst2000);
+        oldestObject.setStorageClass(StorageClass.Glacier.toString());
+
+        ObjectListing truncated = new ObjectListing();
+
+        truncated.getObjectSummaries().add(oldestObject);
+        truncated.setTruncated(true);
+
+        ObjectListing notTruncated = new ObjectListing();
+        notTruncated.getObjectSummaries().add(youngestObject);
+
+        Mockito.when(client.listObjects(Mockito.any(ListObjectsRequest.class))).thenReturn(truncated);
+        Mockito.when(client.listNextBatchOfObjects(Mockito.any(ObjectListing.class))).thenReturn(notTruncated);
+
+        DirectoryWorker worker = new DirectoryWorker("pref", client, "test", StorageFilter.NO_FILTER);
+        worker.call();
 
         assertEquals(januarySecond2000, worker.getLastModifiedDate());
     }

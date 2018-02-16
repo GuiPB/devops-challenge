@@ -84,30 +84,6 @@ public class BucketReportTest {
     }
 
     @Test
-    public void givenMultipleFiles_thenReturnLastModifiedForBucket() {
-        ArrayList<S3ObjectSummary> returnedObject = new ArrayList<S3ObjectSummary>();
-
-        Calendar instance = Calendar.getInstance();
-        instance.set(2000, Calendar.JANUARY, 1);
-        Date januaryFirst2000 = instance.getTime();
-
-        instance.set(2000, Calendar.JANUARY, 2);
-        Date januarySecond2000 = instance.getTime();
-
-        S3ObjectSummary firstObject = new S3ObjectSummary();
-        firstObject.setLastModified(januarySecond2000);
-        returnedObject.add(firstObject);
-
-        S3ObjectSummary secondObject = new S3ObjectSummary();
-        secondObject.setLastModified(januaryFirst2000);
-        returnedObject.add(secondObject);
-
-        BucketReport rep = new BucketReport("name", new Date(), Regions.DEFAULT_REGION, null, null, januarySecond2000);
-
-        assertEquals(januarySecond2000, rep.getLastModifiedDate());
-    }
-
-    @Test
     public void givenHumanReadable_thenReturnHumanReadable() {
         BucketReport report = new BucketReport("", null, Regions.DEFAULT_REGION, null, null, null);
 
