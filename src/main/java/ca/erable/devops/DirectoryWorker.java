@@ -44,7 +44,7 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
     public DirectoryResult getResult() {
         log.debug(() -> "DirectoryWorker results on prefix [" + prefix + "] in bucket " + bucket + " filecount: " + fileCount + " totalFileSize: " + totalFileSize + " commonPrefixes: "
                 + String.join(",", commonPrefixes));
-        return new DirectoryResult(fileCount, totalFileSize, commonPrefixes);
+        return new DirectoryResult(fileCount, totalFileSize, commonPrefixes, lastModified);
     }
 
     @Override
@@ -57,22 +57,24 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
         fileCount = new Integer(0);
 
         List<S3ObjectSummary> objectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(toList());
-        lastModified = objectSummaries.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(new Date());
-        fileCount += objectSummaries.size();
-        totalFileSize += objectSummaries.stream().mapToLong(S3ObjectSummary::getSize).sum();
 
-        while (listObjects.isTruncated()) {
-            log.debug(() -> "DirectoryWorker on prefix [" + prefix + "] in bucket " + bucket + ". Truncation detected. Fetching next batch.");
-            listObjects = client.listNextBatchOfObjects(listObjects);
-            List<S3ObjectSummary> nextObjectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(toList());
-            Date modified = nextObjectSummaries.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
+        if (!objectSummaries.isEmpty()) {
+            lastModified = objectSummaries.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().get();
+            fileCount += objectSummaries.size();
+            totalFileSize += objectSummaries.stream().mapToLong(S3ObjectSummary::getSize).sum();
+            while (listObjects.isTruncated()) {
+                log.debug(() -> "DirectoryWorker on prefix [" + prefix + "] in bucket " + bucket + ". Truncation detected. Fetching next batch.");
+                listObjects = client.listNextBatchOfObjects(listObjects);
+                List<S3ObjectSummary> nextObjectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(toList());
+                Date modified = nextObjectSummaries.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().get();
 
-            if (modified != null && lastModified.before(modified)) {
-                lastModified = modified;
+                if (modified != null && lastModified.before(modified)) {
+                    lastModified = modified;
+                }
+
+                fileCount += nextObjectSummaries.size();
+                totalFileSize += nextObjectSummaries.stream().mapToLong(S3ObjectSummary::getSize).sum();
             }
-
-            fileCount += nextObjectSummaries.size();
-            totalFileSize += nextObjectSummaries.stream().mapToLong(S3ObjectSummary::getSize).sum();
         }
 
         // TODO: filter les fichiers qui sont des dossiers cul-de-sac?
