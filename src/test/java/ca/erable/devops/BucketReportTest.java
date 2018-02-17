@@ -24,7 +24,7 @@ public class BucketReportTest {
         objects.add(s3ObjectSummary);
         objects.add(s3ObjectSummary);
 
-        BucketReport report = new BucketReport("erable", new Date(), Regions.DEFAULT_REGION, 2, null, null);
+        BucketReport report = new BucketReport("erable", new Date(), Regions.DEFAULT_REGION.toString(), 2, null, null);
 
         assertTrue(2 == report.getFileCount());
     }
@@ -38,7 +38,7 @@ public class BucketReportTest {
         objects.add(s3ObjectSummary);
         objects.add(s3ObjectSummary);
 
-        BucketReport report = new BucketReport("name", new Date(), Regions.DEFAULT_REGION, objects.size(), null, null);
+        BucketReport report = new BucketReport("name", new Date(), Regions.DEFAULT_REGION.toString(), objects.size(), null, null);
 
         assertTrue(3 == report.getFileCount());
     }
@@ -46,7 +46,7 @@ public class BucketReportTest {
     @Test
     public void givenBucketHasNoFiles_thenReturnCountZero() {
 
-        BucketReport report = new BucketReport("eralbe", new Date(), Regions.DEFAULT_REGION, 0, null, null);
+        BucketReport report = new BucketReport("eralbe", new Date(), Regions.DEFAULT_REGION.toString(), 0, null, null);
 
         assertTrue(0L == report.getFileCount());
     }
@@ -58,7 +58,7 @@ public class BucketReportTest {
 
         Date simulatedCreationTime = calendar.getTime();
 
-        BucketReport rep = new BucketReport("name", simulatedCreationTime, Regions.DEFAULT_REGION, null, null, null);
+        BucketReport rep = new BucketReport("name", simulatedCreationTime, Regions.DEFAULT_REGION.toString(), null, null, null);
 
         assertTrue(simulatedCreationTime.getTime() == rep.getCreationDate().getTime());
     }
@@ -79,13 +79,13 @@ public class BucketReportTest {
 
         returnedObject.add(secondObject);
 
-        BucketReport rep = new BucketReport("name", new Date(), Regions.DEFAULT_REGION, null, 600L, null);
+        BucketReport rep = new BucketReport("name", new Date(), Regions.DEFAULT_REGION.toString(), null, 600L, null);
         assertEquals(new Long(600), rep.getTotalFileSize());
     }
 
     @Test
     public void givenHumanReadable_thenReturnHumanReadable() {
-        BucketReport report = new BucketReport("", null, Regions.DEFAULT_REGION, null, null, null);
+        BucketReport report = new BucketReport("", null, Regions.DEFAULT_REGION.toString(), null, null, null);
 
         assertEquals("12,9 MB", report.toReadableFileSize(12875897L));
         assertEquals("999 B", report.toReadableFileSize(999L));

@@ -72,7 +72,7 @@ public class BucketsAnalyserTest {
         Bucket simulatedBucket = new Bucket(bucketName);
         simulatedBucket.setOwner(new Owner("1", "guillaume"));
 
-        BucketReport simulatedReport = new BucketReport(bucketName, null, Regions.DEFAULT_REGION, null, null, null);
+        BucketReport simulatedReport = new BucketReport(bucketName, null, Regions.DEFAULT_REGION.toString(), null, null, null);
 
         Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(simulatedBucket));
         Mockito.when(s3Service.reportOnBucket(bucketName, StorageFilter.NO_FILTER)).thenReturn(new BucketReport(bucketName, null, null, null, null, null));

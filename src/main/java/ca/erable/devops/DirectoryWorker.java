@@ -81,8 +81,6 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
 
         }
 
-        // TODO: filter les fichiers qui sont des dossiers cul-de-sac?
-
         return getResult();
     }
 

@@ -1,5 +1,6 @@
 package ca.erable.devops;
 
+import java.awt.IllegalComponentStateException;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -11,12 +12,13 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 public class S3BucketTool {
 
+    // TODO : Logging
     public static void main(String[] args) {
 
         Options options = new Options();
@@ -57,32 +59,8 @@ public class S3BucketTool {
                     pattern = line.getOptionValue("regex");
                 }
 
-                AmazonS3ClientBuilder clientBuilder = AmazonS3ClientBuilder.standard().withRegion(Regions.DEFAULT_REGION);
-
-                AmazonS3Service service = new AmazonS3ServiceImpl(clientBuilder);
-
-                BucketsAnalyser analyser = new BucketsAnalyser(service);
-
-                analyser.analyseBuckets(filterByStorage, pattern);
-
-                List<BucketReport> allReports = analyser.getAllReports();
-
-                if (groupByRegion) {
-                    // Bucketed hashmap. Chaque clef comprend une liste.
-                    Map<Regions, List<BucketReport>> groupedByRegion = allReports.stream().collect(Collectors.groupingBy(BucketReport::getBucketLocation));
-                    for (Regions region : groupedByRegion.keySet()) {
-                        System.out.println(region.toString());
-                        List<BucketReport> list = groupedByRegion.get(region);
-                        for (BucketReport rep : list) {
-                            rep.show(humanReadable);
-                        }
-
-                    }
-                } else {
-                    for (BucketReport rep : allReports) {
-                        rep.show(humanReadable);
-                    }
-                }
+                S3BucketTool s3BucketTool = new S3BucketTool();
+                s3BucketTool.runApp(humanReadable, groupByRegion, filterByStorage, pattern);
 
             }
         } catch (ParseException e) {
@@ -92,5 +70,42 @@ public class S3BucketTool {
             e.printStackTrace();
         }
 
+    }
+
+    private void runApp(boolean humanReadable, boolean groupByRegion, StorageFilter filterByStorage, String pattern) throws InterruptedException {
+        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class);
+        AmazonS3ClientBuilder clientBuilder = ctx.getBean(AmazonS3ClientBuilder.class);
+
+        if (clientBuilder == null) {
+            ctx.close();
+            throw new IllegalComponentStateException("Cannot create an AmazonS3ClientBuilder");
+        }
+
+        AmazonS3Service service = new AmazonS3ServiceImpl(clientBuilder);
+
+        BucketsAnalyser analyser = new BucketsAnalyser(service);
+
+        analyser.analyseBuckets(filterByStorage, pattern);
+
+        List<BucketReport> allReports = analyser.getAllReports();
+
+        if (groupByRegion) {
+            // Bucketed hashmap. Chaque clef comprend une liste.
+            Map<String, List<BucketReport>> groupedByRegion = allReports.stream().collect(Collectors.groupingBy(BucketReport::getBucketLocation));
+            for (String region : groupedByRegion.keySet()) {
+                System.out.println(region.toString());
+                List<BucketReport> list = groupedByRegion.get(region);
+                for (BucketReport rep : list) {
+                    rep.show(humanReadable);
+                }
+
+            }
+        } else {
+            for (BucketReport rep : allReports) {
+                rep.show(humanReadable);
+            }
+        }
+
+        ctx.close();
     }
 }

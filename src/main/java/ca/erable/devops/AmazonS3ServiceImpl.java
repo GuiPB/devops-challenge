@@ -27,7 +27,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
 
     private static Logger log = LogManager.getLogger(AmazonS3ServiceImpl.class);
     private AmazonS3 defaultClient;
-    private Map<String, Regions> locationByBucket = new HashMap<>();
+    private Map<String, String> locationByBucket = new HashMap<>();
     private Map<String, AmazonS3> clientsByBucket = new HashMap<>();
     private AmazonS3ClientBuilder clientBuilder;
     private Map<String, Bucket> buckets = new HashMap<>();
@@ -45,10 +45,9 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         log.debug(() -> "Creating a client for each bucket");
         listBuckets.stream().forEach(bucket -> {
             String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
-            Regions bucketRegion = Regions.fromName(bucketLocation);
             log.debug(() -> "Region " + bucketLocation + " for bucket " + bucket.getName());
-            locationByBucket.put(bucket.getName(), bucketRegion);
-            clientsByBucket.put(bucket.getName(), clientBuilder.withRegion(bucketRegion).build());
+            locationByBucket.put(bucket.getName(), bucketLocation);
+            clientsByBucket.put(bucket.getName(), clientBuilder.withRegion(bucketLocation).build());
             buckets.put(bucket.getName(), bucket);
         });
 
@@ -145,8 +144,8 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
     }
 
     @Override
-    public Regions getBucketLocation(String bucketName) {
-        return locationByBucket.getOrDefault(bucketName, Regions.DEFAULT_REGION);
+    public String getBucketLocation(String bucketName) {
+        return locationByBucket.getOrDefault(bucketName, Regions.DEFAULT_REGION.toString());
     }
 
 }

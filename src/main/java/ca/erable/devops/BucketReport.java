@@ -11,9 +11,9 @@ public class BucketReport {
     private String name;
     private Long totalFileSize = 0L;
     private Date lastModifiedDate = null;
-    private Regions bucketLocation = Regions.DEFAULT_REGION;
+    private String bucketLocation = Regions.DEFAULT_REGION.toString();
 
-    public BucketReport(String name, Date creationDate, Regions bucketLocation, Integer fileCountParam, Long totalFileSizeParam, Date lastModifiedParam) {
+    public BucketReport(String name, Date creationDate, String bucketLocation, Integer fileCountParam, Long totalFileSizeParam, Date lastModifiedParam) {
         this.name = name;
         this.creationDate = creationDate;
         this.fileCount = fileCountParam;
@@ -38,7 +38,7 @@ public class BucketReport {
         return totalFileSize;
     }
 
-    public Regions getBucketLocation() {
+    public String getBucketLocation() {
         return bucketLocation;
     }
 
