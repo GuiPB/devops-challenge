@@ -121,12 +121,14 @@ public class BucketReport {
     }
 
     public void show() {
+        System.out.println("*********************************************");
         System.out.println("name: " + getName());
         System.out.println("location: " + getBucketLocation().toString());
         System.out.println("creation date: " + getCreationDate());
         System.out.println("last modified: " + getLastModifiedDate());
         System.out.println("file count: " + getFileCount());
         System.out.println("size: " + getTotalFileSize());
+        System.out.println("*********************************************");
     }
 
     public void show(boolean humanReadable) {
@@ -138,11 +140,13 @@ public class BucketReport {
     }
 
     public void showHumanReadable() {
+        System.out.println("*********************************************");
         System.out.println("name: " + getName());
         System.out.println("location: " + getBucketLocation().toString());
         System.out.println("creation date: " + getCreationDate());
         System.out.println("last modified: " + getLastModifiedDate());
         System.out.println("file count: " + getFileCount());
         System.out.println("size: " + toReadableFileSize());
+        System.out.println("*********************************************");
     }
 }
