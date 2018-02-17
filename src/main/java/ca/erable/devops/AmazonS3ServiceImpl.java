@@ -69,6 +69,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         List<DirectoryWorker> workers = new ArrayList<>();
         List<DirectoryResult> collectedStats = new ArrayList<>();
 
+        // TODO : extraire ameliorer la lisibilité. après les tests d'intégration
         while (!commonPrefixes.isEmpty()) {
 
             ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -130,25 +131,12 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         Date lastModifiedRootFolder = objects.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
         Date lastModifiedChildFolder = collectedStats.parallelStream().map(DirectoryResult::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
 
-        Date lastModified = chooseWichDate(lastModifiedRootFolder, lastModifiedChildFolder);
+        Date lastModified = DateOrderUtils.returnLatest(lastModifiedRootFolder, lastModifiedChildFolder);
 
         Integer numberOfFile = collectedStats.parallelStream().mapToInt(DirectoryResult::getFileCount).sum();
         numberOfFile += objects.size();
 
         return new BucketReport(bucketName, buckets.get(bucketName).getCreationDate(), locationByBucket.get(bucketName), numberOfFile, totalSize, lastModified);
-    }
-
-    private Date chooseWichDate(Date lastModifiedRootFolder, Date lastModifiedChildFolder) {
-        Date lastModified = null;
-
-        if (lastModifiedChildFolder != null && lastModifiedRootFolder == null) {
-            return lastModifiedChildFolder;
-        } else if (lastModifiedChildFolder == null && lastModifiedRootFolder != null) {
-            return lastModifiedRootFolder;
-        } else if (lastModifiedChildFolder != null && lastModifiedRootFolder != null) {
-            lastModified = lastModifiedChildFolder.after(lastModifiedRootFolder) ? lastModifiedChildFolder : lastModifiedRootFolder;
-        }
-        return lastModified;
     }
 
     @Override
