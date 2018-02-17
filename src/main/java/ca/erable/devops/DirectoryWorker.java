@@ -56,7 +56,7 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
         totalFileSize = new Long(0);
         fileCount = new Integer(0);
 
-        List<S3ObjectSummary> objectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(toList());
+        List<S3ObjectSummary> objectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).filter(i -> !i.getKey().endsWith("/")).collect(toList());
 
         if (!objectSummaries.isEmpty()) {
             lastModified = objectSummaries.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().get();
@@ -68,7 +68,7 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
         while (listObjects.isTruncated()) {
             log.debug(() -> "DirectoryWorker on prefix [" + prefix + "] in bucket " + bucket + ". Truncation detected. Fetching next batch.");
             listObjects = client.listNextBatchOfObjects(listObjects);
-            List<S3ObjectSummary> nextObjectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).collect(toList());
+            List<S3ObjectSummary> nextObjectSummaries = listObjects.getObjectSummaries().stream().filter(y -> filter.isFiltred(y)).filter(i -> !i.getKey().endsWith("/")).collect(toList());
 
             if (!nextObjectSummaries.isEmpty()) {
                 Date modified = nextObjectSummaries.stream().map(S3ObjectSummary::getLastModified).sorted((a, b) -> b.compareTo(a)).findFirst().get();
