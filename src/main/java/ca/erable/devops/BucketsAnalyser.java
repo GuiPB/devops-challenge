@@ -33,7 +33,7 @@ public class BucketsAnalyser {
         return reports.get(bucketName);
     }
 
-    public void analyse() throws InterruptedException {
+    public void analyse() {
         // Appliquer le filtre de nom optionnel.
         bucketList = awsS3.listBuckets().stream().filter(bucket -> bucketNameMatches.test(bucket.getName())).collect(Collectors.toList());
 
