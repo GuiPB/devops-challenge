@@ -1,8 +1,16 @@
 package ca.erable.devops;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Classe de résultat d'analyse d'un dossier. Cette classe permet de retourner
+ * de multiples résultats de l'analyse.
+ * 
+ * @author guillaume
+ *
+ */
 public class DirectoryResult {
 
     private Integer fileCount = 0;
@@ -26,7 +34,7 @@ public class DirectoryResult {
     }
 
     public List<String> getCommonPrefixes() {
-        return commonPrefixes;
+        return Collections.unmodifiableList(commonPrefixes);
     }
 
     public Date getLastModified() {
