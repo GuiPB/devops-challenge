@@ -9,10 +9,10 @@ L'outils permet d'obtenir les informations suivantes:
 - Dernière date de mise-à-jour
 
 L'outils supporte égalemnent les options suivantes:
- - Possibilité de sortir les résultats en octets, Kilooctets, Megaoctets, … ;
- - Pouvoir sortir les informations par type de stockage (Standard, IA, RR) ;
- - Pouvoir spécifier une liste de buckets (bonus si support des expressions régulières) ;
- - Pouvoir regrouper les informations par régions.
+- Possibilité de sortir les résultats en octets, Kilooctets, Megaoctets, … ;
+- Pouvoir sortir les informations par type de stockage (Standard, IA, RR) ;
+- Pouvoir spécifier une liste de buckets (bonus si support des expressions régulières) ;
+- Pouvoir regrouper les informations par régions.
 
 ### Performance
 Une attention particulière a été mise sur la performance. En effet, AmazonS3 ne fait pas la distinction entre un fichier ou un dossier. En effet, tout chemin de fichier fait partie du nom de fichier (key). Pour simuler une arborescence, on peut exploiter les prefix communs retournés par la fonction listObjects(). Le programme va découper les listes d'objet en prefix pour permettre à d'autre processus d'effectuer des requêtes à l'aide des préfix.
@@ -20,7 +20,8 @@ Une attention particulière a été mise sur la performance. En effet, AmazonS3 
 Le traitement a été testé selon les hypopthèse suivantes:
 
 - Le délimiteur de dossier sera le caractère '/'
-- Que tout appel à listObjects() retourne toujours tous les prefix possibles
+- On ignorera du calcul les keys qui ont l'apparence de dossier. Exemple: dossier/sous-dossier/
+- Tout appel à listObjects() retourne toujours tous les prefix possibles
 
 En effet, pour ce dernier point, au moment d'écrire ces lignes, la documentation de Amazon ne semble pas évoquer qu'il faille effectuer de multiples appels pour obtenir tous les préfix. Contrairement aux fichiers qui seront retournés par lot de 1000 entrées.
 
@@ -50,7 +51,10 @@ On peut également lancer le programme sur une instance de [S3Mock](https://gith
 
     java -Daws.id -Daws.accessKeyId={monid} -Daws.secretKey={secretkey} -Dspring.profiles.active=integ -jar devop-challenge.jar
 
+### Logging
+On peut manipuler le niveau de verbosité du logging pour activer la debug
 
+    java -Daws.id -Daws.accessKeyId={monid} -Daws.secretKey={secretkey} -Dlog4j.configurationFile=log4j2-debug.xml -jar devop-challenge.jar
 
 ### Constuire l'exécutable avec Maven
 La commande suivante permet de construire localement l'exécutable.
@@ -63,7 +67,8 @@ La commande suivante permet de construire localement l'exécutable.
 
 ### Exécuter les tests d'intégration
     mvn -Dintegration.test [-Dintegration.port] clean test
+    
 Ceci exécute les tests d'intégration à l'aide d'une instance de [S3Mock](https://github.com/gaul/s3proxy). On peut choisir le port de communication à l'aide de la proriété de JVM optionnelle. Les tests vont créer une arboresence de fichier dans le dossier courant et simuler un analyse des buckets créés. Le dossier est nettoyé immédiatement après l'exécution.
 
 ### Rapport de couverture de test
-Un rapport de couverture est généré après chaque exécution des tests. Exécutez les tests d'intégation pour un meilleurs résultat de couverture. 
+Un rapport de couverture est généré après chaque exécution des tests. Exécutez les tests d'intégation pour un meilleurs résultat de couverture.
