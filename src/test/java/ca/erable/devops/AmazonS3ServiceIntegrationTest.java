@@ -102,6 +102,8 @@ public class AmazonS3ServiceIntegrationTest {
         assertTrue(bucket2.getBucketLocation().equals("US"));
         assertEquals(new Integer(1500), bucket2.getFileCount());
         assertEquals(new Long(16500), bucket2.getTotalFileSize());
+
+        analyser.getAllReports().stream().forEach(BucketReport::show);
     }
 
     @After
