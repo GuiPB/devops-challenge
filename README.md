@@ -22,7 +22,7 @@ Le traitement a été testé selon les hypopthèse suivantes:
 - Le délimiteur de dossier sera le caractère '/'
 - Que tout appel à listObjects() retourne toujours tous les prefix possibles
 
-En effet, pour ce dernier point, au moment d'écrire ces lignes, la documentation de Amazon ne semble pas évoquer qu'il faille effectuer de multiples appels pour obtenir tous les préfix. Contrairement au fichiers, qui seront retournés par lot de 1000 entrées.
+En effet, pour ce dernier point, au moment d'écrire ces lignes, la documentation de Amazon ne semble pas évoquer qu'il faille effectuer de multiples appels pour obtenir tous les préfix. Contrairement aux fichiers qui seront retournés par lot de 1000 entrées.
 
  
 ### Utilisation
