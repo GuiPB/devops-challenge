@@ -18,7 +18,6 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 public class S3BucketTool {
 
-    // TODO : Logging
     public static void main(String[] args) {
 
         Options options = new Options();

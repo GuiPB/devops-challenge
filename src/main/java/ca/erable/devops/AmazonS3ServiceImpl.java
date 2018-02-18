@@ -23,6 +23,15 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
+/**
+ * This class is an implementation of a {@link AmazonS3Service}. Before anything
+ * else, listBucket() must be called first, for it creates a client for each
+ * bucket location. Then after, any of the reportOnBucket() methods can be
+ * invoked.
+ * 
+ * @author guillaume
+ *
+ */
 public class AmazonS3ServiceImpl implements AmazonS3Service {
 
     private static Logger log = LogManager.getLogger(AmazonS3ServiceImpl.class);
@@ -37,12 +46,17 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         clientBuilder = clientBuilderParam;
     }
 
+    /**
+     * This method does indeed list each bucket owned by a given ID and secret key.
+     * It also creates a new client for each distinct bucket locations in cases
+     * where multiple bucket are distributed in many regions. Only one client will
+     * be effectively created for each bucket
+     */
     @Override
     public List<Bucket> listBuckets() {
         List<Bucket> listBuckets = defaultClient.listBuckets();
 
-        // Pour chaque bucket, constuire un client avec la bonne region.
-        log.debug(() -> "Creating a client for each bucket");
+        log.debug(() -> "Creating a client for each bucket location");
         listBuckets.stream().forEach(bucket -> {
             String bucketLocation = defaultClient.getBucketLocation(bucket.getName());
             log.debug(() -> "Region " + bucketLocation + " for bucket " + bucket.getName());
@@ -54,6 +68,24 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         return listBuckets;
     }
 
+    /**
+     * <p>
+     * This method reports stats on a given bucket.
+     * </p>
+     * <p>
+     * It does so by listing a first batch of key entries from the bucket. Then, it
+     * creates a thread for each common prefixes it receives. Each thread will also
+     * gather other common prefixes to process. This process will loop until there
+     * is no sub-directory to analyse. Finally, the root directory is also analysed
+     * and everything is summerized in {@link BucketReport}.
+     * </p>
+     * <p>
+     * This process is intended to profit from prefixes as they can used to split
+     * the workload on many workers. Since amazon is able to scale as requests grow
+     * in number, the theory is that eache worker will be more efficient at
+     * processing paginated results.
+     * </p>
+     */
     @Override
     public BucketReport reportOnBucket(String bucketName, StorageFilter byStorage) {
         log.debug(() -> "Report on bucket " + bucketName);
@@ -65,10 +97,38 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
         List<String> commonPrefixes = rootListObjects.getCommonPrefixes();
         log.debug(() -> "Common prefixes: " + String.join(",", commonPrefixes));
 
+        log.debug(() -> "Drilling down directories if applicable");
+        List<DirectoryResult> collectedStats = drillDownDirectoryHierachy(bucketName, byStorage, clientForBucket, commonPrefixes);
+
+        List<S3ObjectSummary> objects = new ArrayList<>();
+        objects.addAll(rootListObjects.getObjectSummaries().stream().filter(y -> byStorage.isFiltred(y)).collect(toList()));
+
+        while (rootListObjects.isTruncated()) {
+            log.debug(() -> "Truncation detected. Listing bucket on root directory");
+            rootListObjects = clientForBucket.listNextBatchOfObjects(rootListObjects);
+            objects.addAll(rootListObjects.getObjectSummaries().stream().filter(y -> byStorage.isFiltred(y)).collect(toList()));
+        }
+
+        log.debug(() -> "Summerizing data");
+        Long totalSize = collectedStats.parallelStream().mapToLong(DirectoryResult::getFileSize).sum();
+        totalSize += objects.parallelStream().mapToLong(i -> i.getSize()).sum();
+
+        Date lastModifiedRootFolder = objects.stream().map(S3ObjectSummary::getLastModified).filter(d -> d != null).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
+        Date lastModifiedChildFolder = collectedStats.parallelStream().map(DirectoryResult::getLastModified).filter(d -> d != null).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
+
+        Date lastModified = DateOrderUtils.returnLatest(lastModifiedRootFolder, lastModifiedChildFolder);
+
+        Integer numberOfFile = collectedStats.parallelStream().mapToInt(DirectoryResult::getFileCount).sum();
+        numberOfFile += objects.size();
+
+        return new BucketReport(bucketName, buckets.get(bucketName).getCreationDate(), locationByBucket.get(bucketName), numberOfFile, totalSize, lastModified);
+    }
+
+    private List<DirectoryResult> drillDownDirectoryHierachy(String bucketName, StorageFilter byStorage, AmazonS3 clientForBucket, List<String> commonPrefixesParam) {
         List<DirectoryWorker> workers = new ArrayList<>();
         List<DirectoryResult> collectedStats = new ArrayList<>();
+        List<String> commonPrefixes = commonPrefixesParam;
 
-        // TODO : extraire ameliorer la lisibilité. après les tests d'intégration
         while (!commonPrefixes.isEmpty()) {
 
             ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -101,6 +161,7 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
                 log.error("Error while awaiting termination", e);
             }
 
+            log.debug(() -> "Clearing current prefixes. Replace by new ones from each directory");
             commonPrefixes.clear();
             List<List<String>> collectedNewPrefixes = newResults.stream().map(t -> t.getCommonPrefixes()).filter(l -> !l.isEmpty()).collect(toList());
 
@@ -114,33 +175,15 @@ public class AmazonS3ServiceImpl implements AmazonS3Service {
             workers.clear();
         }
 
-        List<S3ObjectSummary> objects = new ArrayList<>();
-        objects.addAll(rootListObjects.getObjectSummaries().stream().filter(y -> byStorage.isFiltred(y)).collect(toList()));
-
-        while (rootListObjects.isTruncated()) {
-            log.debug(() -> "Truncation detected. Listing bucket on root directory");
-            rootListObjects = clientForBucket.listNextBatchOfObjects(rootListObjects);
-            objects.addAll(rootListObjects.getObjectSummaries().stream().filter(y -> byStorage.isFiltred(y)).collect(toList()));
-        }
-
-        log.debug(() -> "Summerizing data");
-        Long totalSize = collectedStats.parallelStream().mapToLong(DirectoryResult::getFileSize).sum();
-        totalSize += objects.parallelStream().mapToLong(i -> i.getSize()).sum();
-
-        Date lastModifiedRootFolder = objects.stream().map(S3ObjectSummary::getLastModified).filter(d -> d != null).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
-        Date lastModifiedChildFolder = collectedStats.parallelStream().map(DirectoryResult::getLastModified).filter(d -> d != null).sorted((a, b) -> b.compareTo(a)).findFirst().orElse(null);
-
-        Date lastModified = DateOrderUtils.returnLatest(lastModifiedRootFolder, lastModifiedChildFolder);
-
-        Integer numberOfFile = collectedStats.parallelStream().mapToInt(DirectoryResult::getFileCount).sum();
-        numberOfFile += objects.size();
-
-        return new BucketReport(bucketName, buckets.get(bucketName).getCreationDate(), locationByBucket.get(bucketName), numberOfFile, totalSize, lastModified);
+        return collectedStats;
     }
 
+    /**
+     * Reports on given bucket without any filter.
+     */
     @Override
-    public BucketReport reportOnBucket(String string) {
-        return reportOnBucket(string, StorageFilter.NO_FILTER);
+    public BucketReport reportOnBucket(String name) {
+        return reportOnBucket(name, StorageFilter.NO_FILTER);
     }
 
     @Override

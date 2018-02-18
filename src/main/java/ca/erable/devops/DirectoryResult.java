@@ -5,8 +5,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Classe de résultat d'analyse d'un dossier. Cette classe permet de retourner
- * de multiples résultats de l'analyse.
+ * This class is a placeholder for a directory analysis result
  * 
  * @author guillaume
  *

@@ -5,6 +5,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.junit.Test;
@@ -66,21 +67,29 @@ public class BucketsAnalyserTest {
     }
 
     @Test
+    public void givenNoBucket_thenReturnFalse() {
+        String nonExistent = "nonExistent";
+        BucketsAnalyser report = new BucketsAnalyser(s3Service);
+        assertFalse(report.containsBucket(nonExistent));
+    }
+
+    @Test
     public void givenABucketExists_thenReturnReport() throws InterruptedException {
         String bucketName = "ca.erable.boisclair";
 
         Bucket simulatedBucket = new Bucket(bucketName);
         simulatedBucket.setOwner(new Owner("1", "guillaume"));
 
-        BucketReport simulatedReport = new BucketReport(bucketName, null, Regions.DEFAULT_REGION.toString(), null, null, null);
+        Date creationDate = new Date();
+        BucketReport simulatedReport = new BucketReport(bucketName, creationDate, Regions.DEFAULT_REGION.toString(), 0, 0L, creationDate);
 
         Mockito.when(s3Service.listBuckets()).thenReturn(Arrays.asList(simulatedBucket));
-        Mockito.when(s3Service.reportOnBucket(bucketName, StorageFilter.NO_FILTER)).thenReturn(new BucketReport(bucketName, null, null, null, null, null));
+        Mockito.when(s3Service.reportOnBucket(bucketName, StorageFilter.NO_FILTER)).thenReturn(new BucketReport(bucketName, creationDate, Regions.DEFAULT_REGION.toString(), 0, 0L, creationDate));
 
         BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
         analyser.analyse();
 
-        BucketReport actualReport = analyser.report(bucketName);
+        BucketReport actualReport = analyser.getReport(bucketName);
 
         assertFalse(actualReport == null);
         assertEquals(simulatedReport, actualReport);
@@ -94,7 +103,7 @@ public class BucketsAnalyserTest {
 
         BucketsAnalyser analyser = new BucketsAnalyser(s3Service);
         analyser.analyse();
-        BucketReport actualReport = analyser.report("");
+        BucketReport actualReport = analyser.getReport("");
 
         assertTrue(actualReport == null);
     }

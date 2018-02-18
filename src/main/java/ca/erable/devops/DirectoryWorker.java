@@ -15,6 +15,13 @@ import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.ObjectListing;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
+/**
+ * This is a worker on a directory. A directory is defined by file key splited
+ * by a file separator.
+ * 
+ * @author guillaume
+ *
+ */
 public class DirectoryWorker implements Callable<DirectoryResult> {
 
     private static Logger log = LogManager.getLogger(DirectoryResult.class);
@@ -47,6 +54,10 @@ public class DirectoryWorker implements Callable<DirectoryResult> {
         return new DirectoryResult(fileCount, totalFileSize, commonPrefixes, lastModified);
     }
 
+    /**
+     * This method process to count file number, sum file sizes and find any common
+     * prefixes.
+     */
     @Override
     public DirectoryResult call() {
         log.debug(() -> "DirectoryWorker on prefix [" + prefix + "] in bucket " + bucket);

@@ -4,6 +4,12 @@ import java.util.Date;
 
 import com.amazonaws.regions.Regions;
 
+/**
+ * This class serves as a report from a bucket analysis
+ * 
+ * @author guillaume
+ *
+ */
 public class BucketReport {
 
     private Integer fileCount = 0;
@@ -13,6 +19,15 @@ public class BucketReport {
     private Date lastModifiedDate = null;
     private String bucketLocation = Regions.DEFAULT_REGION.toString();
 
+    /**
+     * 
+     * @param name
+     * @param creationDate
+     * @param bucketLocation
+     * @param fileCountParam
+     * @param totalFileSizeParam
+     * @param lastModifiedParam
+     */
     public BucketReport(String name, Date creationDate, String bucketLocation, Integer fileCountParam, Long totalFileSizeParam, Date lastModifiedParam) {
         this.name = name;
         this.creationDate = creationDate;
@@ -46,6 +61,16 @@ public class BucketReport {
         return toReadableFileSize(totalFileSize);
     }
 
+    /**
+     * This method will convert a number of byte to a nearest adequate unit. B kB MB
+     * TB PB EB. It will convert on a internationnal standard.
+     * 
+     * Ref:
+     * https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
+     * 
+     * @param bytes
+     * @return
+     */
     public String toReadableFileSize(Long bytes) {
         // Ce code provient d'une solution propose par un developpeur sur stackoverflow.
         // Il est rare que je copie des lignes de code, mais j'ai confiance en celles-ci
@@ -75,6 +100,7 @@ public class BucketReport {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
+        result = prime * result + ((bucketLocation == null) ? 0 : bucketLocation.hashCode());
         result = prime * result + ((creationDate == null) ? 0 : creationDate.hashCode());
         result = prime * result + ((fileCount == null) ? 0 : fileCount.hashCode());
         result = prime * result + ((lastModifiedDate == null) ? 0 : lastModifiedDate.hashCode());
@@ -92,6 +118,11 @@ public class BucketReport {
         if (getClass() != obj.getClass())
             return false;
         BucketReport other = (BucketReport) obj;
+        if (bucketLocation == null) {
+            if (other.bucketLocation != null)
+                return false;
+        } else if (!bucketLocation.equals(other.bucketLocation))
+            return false;
         if (creationDate == null) {
             if (other.creationDate != null)
                 return false;

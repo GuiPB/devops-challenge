@@ -1,6 +1,7 @@
 package ca.erable.devops;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
@@ -14,6 +15,41 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 public class BucketReportTest {
+
+    @Test
+    public void givenSomeUnEquals_thenReturnFalse() {
+
+        Calendar instance = Calendar.getInstance();
+        instance.set(2000, Calendar.JANUARY, 1);
+
+        Date creationDate = new Date();
+        Date lastMod = creationDate;
+        BucketReport report = new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 2, 0L, lastMod);
+        BucketReport report2 = new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 2, 0L, instance.getTime());
+
+        assertNotEquals(report, report2);
+        assertNotEquals(report, new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 2, 1L, lastMod));
+        assertNotEquals(report, new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 1, 0L, lastMod));
+        assertNotEquals(report, new BucketReport("erable", creationDate, "test", 2, 0L, lastMod));
+        assertNotEquals(report, new BucketReport("erable", instance.getTime(), Regions.DEFAULT_REGION.toString(), 2, 0L, lastMod));
+        assertNotEquals(report, new BucketReport("erable2", creationDate, Regions.DEFAULT_REGION.toString(), 2, 0L, lastMod));
+
+        assertNotEquals(report, null);
+        assertNotEquals(report, new BucketReport(null, creationDate, Regions.DEFAULT_REGION.toString(), 2, 0L, lastMod));
+        assertNotEquals(report, new BucketReport("erable", null, Regions.DEFAULT_REGION.toString(), 2, 0L, lastMod));
+        assertNotEquals(report, new BucketReport("erable", creationDate, null, 2, 0L, lastMod));
+        assertNotEquals(report, new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), null, 0L, lastMod));
+        assertNotEquals(report, new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 2, null, lastMod));
+        assertNotEquals(report, new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 2, 0L, null));
+
+        assertNotEquals(null, report);
+        assertNotEquals(new BucketReport(null, creationDate, Regions.DEFAULT_REGION.toString(), 2, 0L, lastMod), report);
+        assertNotEquals(new BucketReport("erable", null, Regions.DEFAULT_REGION.toString(), 2, 0L, lastMod), report);
+        assertNotEquals(new BucketReport("erable", creationDate, null, 2, 0L, lastMod), report);
+        assertNotEquals(new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), null, 0L, lastMod), report);
+        assertNotEquals(new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 2, null, lastMod), report);
+        assertNotEquals(new BucketReport("erable", creationDate, Regions.DEFAULT_REGION.toString(), 2, 0L, null), report);
+    }
 
     @Test
     public void givenBucketContainsTwoFile_thenReturnTwoFileCount() {
