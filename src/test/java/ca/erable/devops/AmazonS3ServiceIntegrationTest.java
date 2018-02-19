@@ -103,7 +103,9 @@ public class AmazonS3ServiceIntegrationTest {
         assertEquals(new Integer(1500), bucket2.getFileCount());
         assertEquals(new Long(16500), bucket2.getTotalFileSize());
 
-        analyser.getAllReports().stream().forEach(BucketReport::show);
+        for (BucketReport rep : analyser.getAllReports()) {
+            rep.show(true, System.out);
+        }
     }
 
     @After

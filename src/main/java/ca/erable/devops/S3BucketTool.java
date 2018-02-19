@@ -1,6 +1,7 @@
 package ca.erable.devops;
 
 import java.awt.IllegalComponentStateException;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -15,6 +16,9 @@ import org.apache.commons.cli.ParseException;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class S3BucketTool {
 
@@ -26,6 +30,7 @@ public class S3BucketTool {
         options.addOption(Option.builder("gr").longOpt("group-by-region").desc("Groups results by regions i.e. summarize by region instead of by bucket").build());
         options.addOption(Option.builder("st").longOpt("stockage-type").desc("Filters shown information by a specified stockage type").hasArg().build());
         options.addOption(Option.builder("regex").longOpt("regular-exp").desc("Filter results by bucket name matching a given 'Java Pattern' regular expression").hasArg().build());
+        options.addOption(Option.builder("json").longOpt("json-output").desc("Outputs is json formatted").build());
 
         CommandLineParser parser = new DefaultParser();
         try {
@@ -38,6 +43,7 @@ public class S3BucketTool {
                 // Config par defaut de l'app
                 boolean humanReadable = false;
                 boolean groupByRegion = false;
+                boolean jsonFormated = false;
                 StorageFilter filterByStorage = StorageFilter.NO_FILTER;
                 String pattern = ".*";
 
@@ -58,8 +64,12 @@ public class S3BucketTool {
                     pattern = line.getOptionValue("regex");
                 }
 
+                if (line.hasOption("json")) {
+                    jsonFormated = true;
+                }
+
                 S3BucketTool s3BucketTool = new S3BucketTool();
-                s3BucketTool.runApp(humanReadable, groupByRegion, filterByStorage, pattern);
+                s3BucketTool.runApp(humanReadable, groupByRegion, jsonFormated, filterByStorage, pattern);
 
             }
         } catch (ParseException e) {
@@ -71,7 +81,7 @@ public class S3BucketTool {
 
     }
 
-    private void runApp(boolean humanReadable, boolean groupByRegion, StorageFilter filterByStorage, String pattern) throws InterruptedException {
+    private void runApp(boolean humanReadable, boolean groupByRegion, boolean jsonFormated, StorageFilter filterByStorage, String pattern) throws InterruptedException, JsonProcessingException {
         AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(AppConfig.class);
         AmazonS3ClientBuilder clientBuilder = ctx.getBean(AmazonS3ClientBuilder.class);
 
@@ -88,6 +98,8 @@ public class S3BucketTool {
 
         List<BucketReport> allReports = analyser.getAllReports();
 
+        ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
+
         if (groupByRegion) {
             // Bucketed hashmap. Chaque clef comprend une liste.
             Map<String, List<BucketReport>> groupedByRegion = allReports.stream().collect(Collectors.groupingBy(BucketReport::getBucketLocation));
@@ -95,16 +107,26 @@ public class S3BucketTool {
                 System.out.println(region.toString());
                 List<BucketReport> list = groupedByRegion.get(region);
                 for (BucketReport rep : list) {
-                    rep.show(humanReadable);
+                    showResults(humanReadable, jsonFormated, ow, rep);
                 }
 
             }
         } else {
             for (BucketReport rep : allReports) {
-                rep.show(humanReadable);
+                showResults(humanReadable, jsonFormated, ow, rep);
             }
         }
 
         ctx.close();
+    }
+
+    private void showResults(boolean humanReadable, boolean jsonFormated, ObjectWriter ow, BucketReport rep) throws JsonProcessingException {
+        PrintStream out = System.out;
+        if (jsonFormated) {
+            String json = ow.writeValueAsString(rep);
+            out.print(json + System.lineSeparator());
+        } else {
+            rep.show(humanReadable, out);
+        }
     }
 }

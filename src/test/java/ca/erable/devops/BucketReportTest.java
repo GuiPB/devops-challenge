@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -127,5 +128,38 @@ public class BucketReportTest {
         assertEquals("999 B", report.toReadableFileSize(999L));
         assertEquals("250 B", report.toReadableFileSize(250L));
         assertEquals("2,5 kB", report.toReadableFileSize(2500L));
+    }
+
+    @Test
+    public void givenAnOutput_thenShowWillWriteInIt() {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        Date lastModifiedParam = new Date();
+        BucketReport rep = new BucketReport("bucket1", new Date(), "us", 0, 0L, lastModifiedParam);
+
+        rep.show(false, out);
+
+        String lineSeparator = System.lineSeparator();
+        assertEquals("*********************************************" + lineSeparator + "name: bucket1" + lineSeparator + "location: us" + lineSeparator + "creation date: "
+                + lastModifiedParam.toString() + lineSeparator + "last modified: " + lastModifiedParam + lineSeparator + "file count: 0" + lineSeparator + "size: 0" + lineSeparator
+                + "*********************************************" + lineSeparator, out.toString());
+    }
+
+    @Test
+    public void givenHumanReadable_thenShowWillWriteInItRedeadble() {
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        Date lastModifiedParam = new Date();
+        BucketReport rep = new BucketReport("bucket1", new Date(), "us", 0, 10337610L, lastModifiedParam);
+
+        rep.show(true, out);
+
+        String lineSeparator = System.lineSeparator();
+        assertEquals("*********************************************" + lineSeparator + "name: bucket1" + lineSeparator + "location: us" + lineSeparator + "creation date: "
+                + lastModifiedParam.toString() + lineSeparator + "last modified: " + lastModifiedParam + lineSeparator + "file count: 0" + lineSeparator + "size: 10,3 MB" + lineSeparator
+                + "*********************************************" + lineSeparator, out.toString());
+
     }
 }

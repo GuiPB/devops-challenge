@@ -1,5 +1,7 @@
 package ca.erable.devops;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Date;
 
 import com.amazonaws.regions.Regions;
@@ -151,33 +153,30 @@ public class BucketReport {
         return true;
     }
 
-    public void show() {
-        System.out.println("*********************************************");
-        System.out.println("name: " + getName());
-        System.out.println("location: " + getBucketLocation().toString());
-        System.out.println("creation date: " + getCreationDate());
-        System.out.println("last modified: " + getLastModifiedDate());
-        System.out.println("file count: " + getFileCount());
-        System.out.println("size: " + getTotalFileSize());
-        System.out.println("*********************************************");
-    }
-
-    public void show(boolean humanReadable) {
-        if (humanReadable) {
-            showHumanReadable();
-        } else {
-            show();
+    public void show(boolean humanReadable, OutputStream out) {
+        try {
+            out.write("*********************************************".getBytes());
+            out.write(System.lineSeparator().getBytes());
+            out.write(("name: " + getName()).getBytes());
+            out.write(System.lineSeparator().getBytes());
+            out.write(("location: " + getBucketLocation().toString()).getBytes());
+            out.write(System.lineSeparator().getBytes());
+            out.write(("creation date: " + getCreationDate()).getBytes());
+            out.write(System.lineSeparator().getBytes());
+            out.write(("last modified: " + getLastModifiedDate()).getBytes());
+            out.write(System.lineSeparator().getBytes());
+            out.write(("file count: " + getFileCount()).getBytes());
+            out.write(System.lineSeparator().getBytes());
+            if (humanReadable) {
+                out.write(("size: " + toReadableFileSize()).getBytes());
+            } else {
+                out.write(("size: " + getTotalFileSize()).getBytes());
+            }
+            out.write(System.lineSeparator().getBytes());
+            out.write(("*********************************************").getBytes());
+            out.write(System.lineSeparator().getBytes());
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    }
-
-    public void showHumanReadable() {
-        System.out.println("*********************************************");
-        System.out.println("name: " + getName());
-        System.out.println("location: " + getBucketLocation().toString());
-        System.out.println("creation date: " + getCreationDate());
-        System.out.println("last modified: " + getLastModifiedDate());
-        System.out.println("file count: " + getFileCount());
-        System.out.println("size: " + toReadableFileSize());
-        System.out.println("*********************************************");
     }
 }
