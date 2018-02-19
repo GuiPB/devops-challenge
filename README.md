@@ -34,17 +34,18 @@ Le programme est invoqué à partir de la ligne de commande de la façon suivant
 ### Options
 
 ```
-
-  usage: s3buckettool
+usage: s3buckettool
  -gr,--group-by-region        Groups results by regions i.e. summarize by
                               region instead of by bucket
  -h,--help                    Prints usage
  -hr,--human-readable         Shows file size in a human readable format.
                               Ex: kB, MB, GB...
+ -json,--json-output          Outputs is json formatted
  -regex,--regular-exp <arg>   Filter results by bucket name matching a
                               given 'Java Pattern' regular expression
  -st,--stockage-type <arg>    Filters shown information by a specified
                               stockage type
+
 ```
 ### Utilisation sur une instance locale
 On peut également lancer le programme sur une instance de [S3Mock](https://github.com/gaul/s3proxy). On peut utiliser l'image docker avec sa configuration de base.
